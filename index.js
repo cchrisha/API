@@ -64,7 +64,7 @@ app.post('/api/userLogin', async (req, res) => {
 // User Profile
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     try {
-        const { location, contact, profession, bio } = req.body;
+        const { location, contact, profession, addinfo } = req.body;
 
         // Find the authenticated user by ID (from the token)
         const user = await User.findById(req.user.userId);
@@ -77,7 +77,7 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
         user.location = location || user.location;
         user.contact = contact || user.contact;
         user.profession = profession || user.profession;
-        user.bio = bio || user.bio;
+        user.addinfo = addinfo || user.addinfo;
 
         // Save the updated user profile
         const updatedUser = await user.save();
@@ -88,12 +88,28 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     }
 });
 
+// User Logout
+app.post('/api/logout', verifyToken, async (req, res) => {
+    try {
+        // Find the authenticated user by ID
+        const user = await User.findById(req.user.userId);
+
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        res.status(200).json({ message: "Logged out successfully" });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 //DB Connection
 mongoose.connect("mongodb+srv://repatochrishamae:b2bZiRmYya0PmASm@authapi.2xnlj.mongodb.net/?retryWrites=true&w=majority&appName=authAPI")
 .then(()=>{
     console.log("Connected to the database");
-    app.listen(3000, ()=>{
-        console.log('Server is running on port 3000');
+    app.listen(3001, ()=>{
+        console.log('Server is running on port 3001');
     });
 })
 .catch(()=>{

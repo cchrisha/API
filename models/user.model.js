@@ -24,8 +24,13 @@ const UserSchema = mongoose.Schema(
         profession: {
             type: String,
         },
-        bio: {
+        addinfo: {
             type: String,
+        },
+        walletAddress: {
+            type: String,
+            unique: true,
+            default: null, 
         },
     },
     {
