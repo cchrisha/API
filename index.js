@@ -1,5 +1,6 @@
-//index.js
+
 const express = require('express')
+const cors = require('cors');
 const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs'); // For hashing and comparing passwords
 const jwt = require('jsonwebtoken'); // For generating JWT tokens
@@ -8,8 +9,12 @@ const verifyToken = require('./middleware/auth');
 const app = express()
 app.use(express.json())
 
+app.use(cors());
+
+
 // Create account (Sign up)
 app.post('/api/userSignup', async (req, res) => {
+
     try {
         const { name, email, password } = req.body;
 
