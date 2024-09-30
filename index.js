@@ -26,22 +26,17 @@ mongoose.connect("mongodb+srv://repatochrishamae:b2bZiRmYya0PmASm@authapi.2xnlj.
 app.post('/api/userSignup', async (req, res) => {
     try {
         const { name, email, password, location, contact, profession, addinfo } = req.body;
-
-        // Validate required fields
         if (!name || !email || !password || !location || !contact || !profession || !addinfo) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
-        // Check if user with the same email already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({ message: "User with this email already exists" });
         }
 
-        // Hash the password before saving the user
         const hashedPassword = await bcrypt.hash(password, 10);
 
-        // Create the user with hashed password and required fields
         const user = await User.create({
             name,
             email,
@@ -52,7 +47,6 @@ app.post('/api/userSignup', async (req, res) => {
             addinfo
         });
 
-        // Return user information without the password
         res.status(201).json({ 
             userId: user._id, 
             name: user.name, 
@@ -107,13 +101,10 @@ app.post('/api/userLogin', async (req, res) => {
 // User Logout
 app.post('/api/logout', verifyToken, async (req, res) => {
     try {
-        // Find the authenticated user by ID
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-
-        // Optional: Perform any logout operations, if necessary
         res.status(200).json({ message: "Logged out successfully" });
     } catch (e) {
         res.status(500).json({ message: e.message });
@@ -123,12 +114,12 @@ app.post('/api/logout', verifyToken, async (req, res) => {
 // Get User Profile
 app.get('/api/getUserProfile', verifyToken, async (req, res) => {
     try {
-        const user = await User.findById(req.user.userId).select('-password'); // Exclude password
+        const user = await User.findById(req.user.userId).select('-password');
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
 
-        res.status(200).json(user); // Return complete user profile information
+        res.status(200).json(user); 
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
@@ -139,14 +130,10 @@ app.get('/api/getUserProfile', verifyToken, async (req, res) => {
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     try {
         const { location, contact, profession, addinfo } = req.body;
-
-        // Find the authenticated user by ID (from the token)
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-
-        // Update the fields if provided
         user.name = location || user.name;
         user.location = email || user.email;
         user.location = location || user.location;
@@ -154,7 +141,6 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
         user.profession = profession || user.profession;
         user.addinfo = addinfo || user.addinfo;
 
-        // Save the updated user profile
         const updatedUser = await user.save();
         res.status(200).json(updatedUser);
     } catch (e) {
