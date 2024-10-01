@@ -68,11 +68,6 @@ app.post('/api/userLogin', async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // Validate input
-        if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required" });
-        }
-
         // Check if user exists
         const user = await User.findOne({ email });
         if (!user) {
@@ -87,9 +82,9 @@ app.post('/api/userLogin', async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-            { userId: user._id, email: user.email },
-            process.env.JWT_SECRET, // Use environment variable for secret key
-            { expiresIn: '1h' }
+            { userId: user._id, email: user.email }, // Payload
+            'your_secret_key', // Secret key (use a strong secret for production)
+            { expiresIn: '1h' } // Token expiration
         );
 
         res.status(200).json({ token, message: "Login successful" });
