@@ -107,19 +107,26 @@ app.post('/api/logout', verifyToken, async (req, res) => {
 });
 
 // Get User Profile
-app.get('/api/getUserProfile', verifyToken, async (req, res) => {
+app.get('/api/user/:id', verifyToken, async (req, res) => {
     try {
-        const user = await User.findById(req.user.userId).select('-password');
+        const user = await User.findById(req.params.id);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-
-        res.status(200).json(user); 
+        res.status(200).json({
+            userId: user._id,
+            name: user.name,
+            email: user.email,
+            location: user.location,
+            contact: user.contact,
+            profession: user.profession,
+            addinfo: user.addinfo,
+            walletAddress: user.walletAddress // Include if applicable
+        });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
-
 
 // User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
