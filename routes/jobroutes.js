@@ -70,6 +70,26 @@ router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
     }
 });
 
+// Cancel Job Request
+router.delete('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.jobId);
+        if (!job) return res.status(404).json({ message: "Job not found" });
+
+        // Find the index of the request made by the user
+        const requestIndex = job.requests.findIndex(req => req.user.toString() === req.user.userId);
+        if (requestIndex === -1) return res.status(400).json({ message: "You have not requested this job" });
+
+        // Remove the request from the array
+        job.requests.splice(requestIndex, 1);
+        await job.save();
+
+        res.status(200).json({ message: "Job request canceled" });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 // Get Jobs Posted by User
 router.get('/api/user/:userId/jobs', async (req, res) => {
     try {
