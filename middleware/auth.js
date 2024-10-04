@@ -1,3 +1,4 @@
+//api/middleware/auth.js
 const jwt = require('jsonwebtoken');
 
 const verifyToken = (req, res, next) => {

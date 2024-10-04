@@ -1,6 +1,7 @@
+//api/routes/jobroutes.js
 const express = require('express');
 const router = express.Router();
-const { verifyToken } = require('../middleware/auth');
+const verifyToken = require('../middleware/auth');
 const Job = require('../models/job.model.js');  // Make sure Job model is imported
 
 // Post a Job
@@ -19,7 +20,16 @@ router.post('/api/jobs', verifyToken, async (req, res) => {
 // Get Jobs Based on Profession
 router.get('/api/jobs/profession', verifyToken, async (req, res) => {
     try {
-        const jobs = await Job.find({ professions: req.user.profession })
+        console.log(req.user); //print user profession
+
+        const profession = req.user.profession ? req.user.profession.toLowerCase() : ''; //this first
+        console.log('User Profession:', profession); // Debugging log
+
+        //const jobs = await Job.find({ professions: req.user.profession })
+        //const jobs = await Job.find({ professions: { $regex: profession, $options: 'i' } }) // Use regex for case-insensitive matching
+        const jobs = await Job.find({ 
+            professions: { $elemMatch: { $eq: profession } } // Exact match
+        })
             .limit(10)
             .populate('poster', 'name');
         res.status(200).json(jobs);
@@ -59,6 +69,8 @@ router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
         if (!job) return res.status(404).json({ message: "Job not found" });
 
         const existingRequest = job.requests.find(req => req.user.toString() === req.user.userId);
+        //const existingRequest = job.requests.find(request => request.user.toString() === req.user.userId);
+        //req refers to the job request object inside the find function
         if (existingRequest) return res.status(400).json({ message: "You have already requested this job" });
 
         job.requests.push({ user: req.user.userId });
@@ -76,8 +88,9 @@ router.delete('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
         const job = await Job.findById(req.params.jobId);
         if (!job) return res.status(404).json({ message: "Job not found" });
 
-        // Find the index of the request made by the user
-        const requestIndex = job.requests.findIndex(req => req.user.toString() === req.user.userId);
+        // Find the index of the request made by the user using 'equals' for ObjectId comparison
+        const requestIndex = job.requests.findIndex(req => req.user.equals(req.user.userId));
+
         if (requestIndex === -1) return res.status(400).json({ message: "You have not requested this job" });
 
         // Remove the request from the array
@@ -89,6 +102,42 @@ router.delete('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
+
+// // Accept/Reject Job Request
+// router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => {
+//     try {
+//         const { action } = req.body; // 'accept' or 'reject'
+//         const job = await Job.findById(req.params.jobId);
+        
+//         if (!job) {
+//             return res.status(404).json({ message: "Job not found" });
+//         }
+
+//         // Find the index of the request made by the user
+//         const request = job.requests.find(req => req.user.toString() === req.params.userId);
+//         if (!request) {
+//             return res.status(400).json({ message: "Job request not found" });
+//         }
+
+//         // Perform action based on the provided action
+//         if (action === 'accept') {
+//             // Move request from requests to workers
+//             job.workers.push({ user: request.user, status: 'working on' });
+//         } else if (action === 'reject') {
+//             // Simply remove the request
+//             job.requests = job.requests.filter(req => req.user.toString() !== req.params.userId);
+//         } else {
+//             return res.status(400).json({ message: "Invalid action" });
+//         }
+
+//         await job.save();
+//         res.status(200).json({ message: `Job request ${action}ed successfully` });
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
 
 // Get Jobs Posted by User
 router.get('/api/user/:userId/jobs', async (req, res) => {
