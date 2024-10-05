@@ -65,7 +65,6 @@ app.post('/api/userSignup', async (req, res) => {
          const token = jwt.sign(
             { userId: user._id, email: user.email, profession: user.profession }, // Include profession in the token
             'your_jwt_secret', // Use your own secret key
-            { expiresIn: '1h' } // Set expiration time as needed
         );
         
     } catch (e) {
@@ -93,8 +92,7 @@ app.post('/api/userLogin', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email, profession: user.profession }, // Payload / Include profession in the token
-            'your_secret_key', // Secret key (use a strong secret for production)
-            { expiresIn: '1h' } // Token expiration
+            'your_secret_key', // Secret key (use a strong secret for production)x
         );
 
         res.status(200).json({ token, message: "Login successful" });
