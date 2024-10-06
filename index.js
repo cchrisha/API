@@ -230,17 +230,16 @@ app.post('/api/forgotPassword', async (req, res) => {
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
                     <h2 style="color: #333; text-align: center;">Password Reset OTP</h2>
-                    <p>Hello ${user.name},</p>
+                    <p>Hello ${user.name},</p> <!-- Personalized greeting -->
                     <p>Your OTP for resetting your password is:</p>
                     <div style="background-color: #f9f9f9; border: 1px solid #ccc; border-radius: 4px; padding: 10px; text-align: center; font-size: 24px; font-weight: bold; color: #333;">
                         ${otp}
                     </div>
-                    <p style="margin-top: 20px;">This OTP is valid for 5 minutes. If you did not request this, please ignore this email.</p>
+                    <p style="margin-top: 20px;">This OTP is valid for 10 minutes. If you did not request this, please ignore this email.</p>
                     <p style="text-align: center;">Best regards,<br>Community Guild Services</p>
                 </div>
             `
         };
-        
 
         // Send email
         transporter.sendMail(mailOptions, (error, info) => {
