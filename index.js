@@ -41,8 +41,8 @@ mongoose.connect("mongodb+srv://repatochrishamae:b2bZiRmYya0PmASm@authapi.2xnlj.
 // Create account (Sign up)
 app.post('/api/userSignup', async (req, res) => {
     try {
-        const { name, email, password, location, contact, profession, addinfo } = req.body;
-        if (!name || !email || !password || !location || !contact || !profession || !addinfo) {
+        const { name, email, password, location, contact, profession } = req.body;
+        if (!name || !email || !password || !location || !contact || !profession) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
@@ -59,8 +59,7 @@ app.post('/api/userSignup', async (req, res) => {
             password: hashedPassword,
             location,
             contact,
-            profession,
-            addinfo
+            profession
         });
 
         res.status(201).json({
@@ -70,7 +69,6 @@ app.post('/api/userSignup', async (req, res) => {
             location: user.location,
             contact: user.contact,
             profession: user.profession,
-            addinfo: user.addinfo,
             walletAddress: user.walletAddress // Include if applicable
         });
 
@@ -126,7 +124,6 @@ app.get('/api/user', verifyToken, async (req, res) => {
             location: user.location,
             contact: user.contact,
             profession: user.profession,
-            addinfo: user.addinfo,
             walletAddress: user.walletAddress // Include if applicable
         });
     } catch (e) {
@@ -137,7 +134,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
 // User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     try {
-        const {name, location, contact, profession, addinfo } = req.body;
+        const {name, location, contact, profession } = req.body;
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -147,7 +144,6 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
         user.location = location || user.location;
         user.contact = contact || user.contact;
         user.profession = profession || user.profession;
-        user.addinfo = addinfo || user.addinfo;
 
         const updatedUser = await user.save();
         res.status(200).json(updatedUser);
