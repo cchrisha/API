@@ -80,7 +80,7 @@ app.post('/api/userSignup', async (req, res) => {
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, walletAddress } = req.body;
 
         // Check if user exists
         const user = await User.findOne({ email });
@@ -92,6 +92,13 @@ app.post('/api/userLogin', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+         // Check if wallet address is provided and update user
+         if (walletAddress && user.walletAddress !== walletAddress) {
+            user.walletAddress = walletAddress; // Save the wallet address
+            await user.save();
+            res.status(200).json({ token, message: "metamask is connected successfuly!" });
         }
 
         // Generate JWT token
@@ -186,13 +193,34 @@ app.put('/api/changePassword', verifyToken, async (req, res) => {
     }
 });
 
-// User Logout
+    // User Logout
+    //app.post('/api/logout', verifyToken, async (req, res) => {
+    //    try {
+    //        const user = await User.findById(req.user.userId);
+    //        if (!user) {
+    //           return res.status(404).json({ message: "User not found" });
+    //        }
+    //        res.status(200).json({ message: "Logged out successfully" });
+    //    } catch (e) {
+    //        res.status(500).json({ message: e.message });
+    //    }
+    // });
+
 app.post('/api/logout', verifyToken, async (req, res) => {
     try {
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
+
+        // Check if user is logged in with MetaMask
+        if (user.walletAddress) {
+            // Perform MetaMask logout logic here if needed
+            user.walletAddress = null; // Remove the wallet address from the user's profile
+            await user.save();
+            return res.status(200).json({ message: "Logged out successfully" });
+        }
+
         res.status(200).json({ message: "Logged out successfully" });
     } catch (e) {
         res.status(500).json({ message: e.message });
