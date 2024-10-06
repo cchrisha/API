@@ -230,7 +230,7 @@ app.post('/api/forgotPassword', async (req, res) => {
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
                     <h2 style="color: #333; text-align: center;">Password Reset OTP</h2>
-                    <p>Hello,</p>
+                    <p>Hello ${user.name},</p>
                     <p>Your OTP for resetting your password is:</p>
                     <div style="background-color: #f9f9f9; border: 1px solid #ccc; border-radius: 4px; padding: 10px; text-align: center; font-size: 24px; font-weight: bold; color: #333;">
                         ${otp}
