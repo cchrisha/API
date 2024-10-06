@@ -114,7 +114,6 @@ app.post('/api/userLogin', async (req, res) => {
          if (walletAddress && user.walletAddress !== walletAddress) {
             user.walletAddress = walletAddress; // Save the wallet address
             await user.save();
-            res.status(200).json({ token, message: "metamask is connected successfuly!" });
         }
 
         // Generate JWT token
@@ -128,6 +127,26 @@ app.post('/api/userLogin', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
+    app.post('/api/userUpdate', async (req, res) => {
+        try {
+        const { walletAddress } = req.body;
+        const userId = req.user.id; // Assuming you have user ID from the token
+    
+        // Find the user and update the wallet address
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+    
+        user.walletAddress = walletAddress; // Update wallet address
+        await user.save();
+    
+        res.status(200).json({ message: "Wallet address updated successfully" });
+        } catch (e) {
+        res.status(500).json({ message: e.message });
+        }
+    });
 
 // Get User Profile
 app.get('/api/user', verifyToken, async (req, res) => {
