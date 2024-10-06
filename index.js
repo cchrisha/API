@@ -77,6 +77,20 @@ app.post('/api/userSignup', async (req, res) => {
     }
 });
 
+    // Get All Users
+    app.get('/api/users', async (req, res) => {
+        try {
+            // Fetch all users from the database
+            const users = await User.find({}); // Adjust the filter if needed
+
+            // Return the list of users
+            res.status(200).json(users);
+        } catch (e) {
+            // Handle any errors
+            res.status(500).json({ message: e.message });
+        }
+    });
+
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
