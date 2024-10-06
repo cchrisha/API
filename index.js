@@ -191,13 +191,34 @@ app.put('/api/changePassword', verifyToken, async (req, res) => {
     }
 });
 
-// User Logout
+    // User Logout
+    //app.post('/api/logout', verifyToken, async (req, res) => {
+    //    try {
+    //        const user = await User.findById(req.user.userId);
+    //        if (!user) {
+    //           return res.status(404).json({ message: "User not found" });
+    //        }
+    //        res.status(200).json({ message: "Logged out successfully" });
+    //    } catch (e) {
+    //        res.status(500).json({ message: e.message });
+    //    }
+    // });
+
 app.post('/api/logout', verifyToken, async (req, res) => {
     try {
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
+
+        // Check if user is logged in with MetaMask
+        if (user.walletAddress) {
+            // Perform MetaMask logout logic here if needed
+            user.walletAddress = null; // Remove the wallet address from the user's profile
+            await user.save();
+            return res.status(200).json({ message: "Logged out successfully" });
+        }
+
         res.status(200).json({ message: "Logged out successfully" });
     } catch (e) {
         res.status(500).json({ message: e.message });
