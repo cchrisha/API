@@ -27,10 +27,6 @@ const UserSchema = mongoose.Schema(
             type: String,
             required: [true, "Please enter your profession"], 
         },
-        addinfo: {
-            type: String,
-            required: [true, "Please enter additional information"],
-        },
         walletAddress: {
             type: String,
             unique: true,
