@@ -97,8 +97,7 @@ app.post('/api/userLogin', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email }, // Payload
-            'your_secret_key', // Secret key (use a strong secret for production)
-            { expiresIn: '1h' } // Token expiration
+            'your_secret_key', 
         );
 
         res.status(200).json({ token, message: "Login successful" });
