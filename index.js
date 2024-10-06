@@ -235,7 +235,7 @@ app.post('/api/forgotPassword', async (req, res) => {
                     <div style="background-color: #f9f9f9; border: 1px solid #ccc; border-radius: 4px; padding: 10px; text-align: center; font-size: 24px; font-weight: bold; color: #333;">
                         ${otp}
                     </div>
-                    <p style="margin-top: 20px;">This OTP is valid for 10 minutes. If you did not request this, please ignore this email.</p>
+                    <p style="margin-top: 20px;">This OTP is valid for 5 minutes. If you did not request this, please ignore this email.</p>
                     <p style="text-align: center;">Best regards,<br>Community Guild Services</p>
                 </div>
             `
