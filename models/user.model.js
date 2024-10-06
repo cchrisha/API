@@ -36,12 +36,19 @@ const UserSchema = mongoose.Schema(
             unique: true,
             default: null,  
         },
+        otp: {
+            type: String,
+            default: null, // Default is null, meaning no OTP set
+        },
+        otpExpiry: {
+            type: Date,
+            default: null, // Default is null, meaning no expiry set
+        },
     },
     {
         timestamps: true,
     }
 );
-
 
 const User = mongoose.model("User", UserSchema);
 

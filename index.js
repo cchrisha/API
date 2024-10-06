@@ -1,22 +1,26 @@
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs'); // For hashing and comparing passwords
-const jwt = require('jsonwebtoken'); // For generating JWT tokens
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
 const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 
-const crypto = require('crypto');
 const nodemailer = require('nodemailer');
 
 // Configure nodemailer transporter
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
-        user: 'community.guild.services@gmail.com', 
-        pass: 'kslw rpqi rota jhrn'  
+        user: 'community.guild.services@gmail.com',
+        pass: 'kslw rpqi rota jhrn' 
     }
 });
+
+// Function to generate a random 6-digit OTP
+const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
+};
 
 const app = express();
 app.use(express.json());
@@ -59,9 +63,9 @@ app.post('/api/userSignup', async (req, res) => {
             addinfo
         });
 
-        res.status(201).json({ 
-            userId: user._id, 
-            name: user.name, 
+        res.status(201).json({
+            userId: user._id,
+            name: user.name,
             email: user.email,
             location: user.location,
             contact: user.contact,
@@ -69,7 +73,7 @@ app.post('/api/userSignup', async (req, res) => {
             addinfo: user.addinfo,
             walletAddress: user.walletAddress // Include if applicable
         });
-        
+
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
@@ -105,19 +109,6 @@ app.post('/api/userLogin', async (req, res) => {
     }
 });
 
-// User Logout
-app.post('/api/logout', verifyToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-        res.status(200).json({ message: "Logged out successfully" });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
 // Get User Profile
 app.get('/api/user', verifyToken, async (req, res) => {
     try {
@@ -143,7 +134,6 @@ app.get('/api/user', verifyToken, async (req, res) => {
     }
 });
 
-
 // User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     try {
@@ -152,8 +142,7 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        user.name = location || user.name;
-        user.email = email || user.email;
+        // Only update fields if they are provided
         user.location = location || user.location;
         user.contact = contact || user.contact;
         user.profession = profession || user.profession;
@@ -166,10 +155,14 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     }
 });
 
-// Change Password (Authenticated users)
 app.put('/api/changePassword', verifyToken, async (req, res) => {
     try {
-        const { oldPassword, newPassword } = req.body;
+        const { oldPassword, newPassword, confirmPassword } = req.body;
+
+        // Check if new password and confirm password match
+        if (newPassword !== confirmPassword) {
+            return res.status(400).json({ message: "New password and confirm password do not match" });
+        }
 
         // Find the user by ID from the token
         const user = await User.findById(req.user.userId);
@@ -196,6 +189,19 @@ app.put('/api/changePassword', verifyToken, async (req, res) => {
     }
 });
 
+// User Logout
+app.post('/api/logout', verifyToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        res.status(200).json({ message: "Logged out successfully" });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 // Forgot Password
 app.post('/api/forgotPassword', async (req, res) => {
     try {
@@ -207,31 +213,30 @@ app.post('/api/forgotPassword', async (req, res) => {
             return res.status(404).json({ message: "User with this email does not exist" });
         }
 
-        // Generate a reset token (valid for 1 hour)
-        const resetToken = crypto.randomBytes(32).toString('hex');
-        const tokenExpiry = Date.now() + 3600000; // 1 hour
+        // Generate a 6-digit OTP
+        const otp = generateOTP();
+        const otpExpiry = Date.now() + 300000; // OTP valid for 5 minutes
 
-        // Save reset token and expiry to user document
-        user.resetPasswordToken = resetToken;
-        user.resetPasswordExpires = tokenExpiry;
+        // Save OTP and expiry to user document
+        user.otp = otp; 
+        user.otpExpiry = otpExpiry;
         await user.save();
 
-        // Send email with the reset token
+        // Send email with the OTP
         const mailOptions = {
             from: 'community.guild.services@gmail.com',
             to: user.email,
-            subject: 'Password Reset Request',
+            subject: 'Your OTP for Password Reset',
             html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
-                    <h2 style="color: #333;">Password Reset Request</h2>
+                    <h2 style="color: #333; text-align: center;">Password Reset OTP</h2>
                     <p>Hello,</p>
-                    <p>You requested a password reset. Please click the link below to reset your password:</p>
-                    <a href="https://api-tau-plum.vercel.app/resetPassword?token=${resetToken}" 
-                       style="background-color: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
-                        Reset Password
-                    </a>
-                    <p>If you did not request this, please ignore this email.</p>
-                    <p>Best regards,<br>Your Community Team</p>
+                    <p>Your OTP for resetting your password is:</p>
+                    <div style="background-color: #f9f9f9; border: 1px solid #ccc; border-radius: 4px; padding: 10px; text-align: center; font-size: 24px; font-weight: bold; color: #333;">
+                        ${otp}
+                    </div>
+                    <p style="margin-top: 20px;">This OTP is valid for 5 minutes. If you did not request this, please ignore this email.</p>
+                    <p style="text-align: center;">Best regards,<br>Community Guild Services</p>
                 </div>
             `
         };
@@ -242,9 +247,42 @@ app.post('/api/forgotPassword', async (req, res) => {
             if (error) {
                 return res.status(500).json({ message: 'Error sending email', error: error.message });
             }
-            res.status(200).json({ message: 'Password reset email sent', info });
+            res.status(200).json({ message: 'OTP sent to your email', info });
         });
 
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// Verify OTP and reset password
+app.post('/api/verifyOtp', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+
+        // Find the user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User with this email does not exist" });
+        }
+
+        // Check if the OTP is valid and not expired
+        if (user.otp !== otp || Date.now() > user.otpExpiry) {
+            return res.status(400).json({ message: "Invalid or expired OTP" });
+        }
+
+        // Hash the new password
+        const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+        user.password = hashedNewPassword;
+
+        // Clear OTP fields
+        user.otp = undefined;
+        user.otpExpiry = undefined;
+
+        // Save the updated user document
+        await user.save();
+
+        res.status(200).json({ message: "Password reset successful" });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
