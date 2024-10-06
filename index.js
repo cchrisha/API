@@ -151,6 +151,7 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     }
 });
 
+// Change Password (inside the app)
 app.put('/api/changePassword', verifyToken, async (req, res) => {
     try {
         const { oldPassword, newPassword, confirmPassword } = req.body;
