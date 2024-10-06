@@ -80,7 +80,7 @@ app.post('/api/userSignup', async (req, res) => {
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, walletAddress } = req.body;
 
         // Check if user exists
         const user = await User.findOne({ email });
@@ -92,6 +92,12 @@ app.post('/api/userLogin', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+        // Check if wallet address is provided and update user
+        if (walletAddress && user.walletAddress !== walletAddress) {
+            user.walletAddress = walletAddress; // Save the wallet address
+            await user.save();
         }
 
         // Generate JWT token
