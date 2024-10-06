@@ -94,10 +94,11 @@ app.post('/api/userLogin', async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
-        // Check if wallet address is provided and update user
-        if (walletAddress && user.walletAddress !== walletAddress) {
+         // Check if wallet address is provided and update user
+         if (walletAddress && user.walletAddress !== walletAddress) {
             user.walletAddress = walletAddress; // Save the wallet address
             await user.save();
+            res.status(200).json({ token, message: "metamask is connected successfuly!" });
         }
 
         // Generate JWT token
