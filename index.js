@@ -316,10 +316,10 @@ app.post('/api/forgotPassword', async (req, res) => {
     }
 });
 
-// Verify OTP and reset password
+// Verify OTP
 app.post('/api/verifyOtp', async (req, res) => {
     try {
-        const { email, otp, newPassword } = req.body;
+        const { email, otp } = req.body;
 
         // Find the user by email
         const user = await User.findOne({ email });
@@ -332,18 +332,38 @@ app.post('/api/verifyOtp', async (req, res) => {
             return res.status(400).json({ message: "Invalid or expired OTP" });
         }
 
+        // OTP verified successfully, clear OTP fields
+        user.otp = undefined;
+        user.otpExpiry = undefined;
+        await user.save();
+
+        res.status(200).json({ message: "OTP verified. You can now reset your password." });
+
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// Reset password after OTP is verified
+app.post('/api/resetPassword', async (req, res) => {
+    try {
+        const { email, newPassword } = req.body;
+
+        // Find the user by email
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User with this email does not exist" });
+        }
+
         // Hash the new password
         const hashedNewPassword = await bcrypt.hash(newPassword, 10);
         user.password = hashedNewPassword;
-
-        // Clear OTP fields
-        user.otp = undefined;
-        user.otpExpiry = undefined;
 
         // Save the updated user document
         await user.save();
 
         res.status(200).json({ message: "Password reset successful" });
+
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
