@@ -7,15 +7,59 @@ const Job = require('../models/job.model.js');  // Make sure Job model is import
 // Post a Job
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
-        const { title, wageRange, isCrypto, location, professions, categories } = req.body;
+        const { title, wageRange, isCrypto, location, professions, categories, description } = req.body;
         const job = await Job.create({
-            title, wageRange, isCrypto, location, professions, categories, poster: req.user.userId
+            title, wageRange, isCrypto, location, professions, categories,description, poster: req.user.userId
         });
         res.status(201).json(job);
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+
+//Edit job
+router.put('/api/jobs/:jobId', verifyToken, async (req, res) => {
+    try {
+        const { title, wageRange, isCrypto, location, professions, categories, description } = req.body;
+        const job = await Job.findByIdAndUpdate(req.params.jobId, {
+            title,
+            wageRange,
+            isCrypto,
+            location,
+            professions,
+            categories,
+            description  // Update description here
+        }, { new: true });
+
+        if (!job) return res.status(404).json({ message: "Job not found" });
+
+        res.status(200).json(job);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// Delete a Job
+router.delete('/api/jobs/:jobId', verifyToken, async (req, res) => {
+    try {
+        const job = await Job.findById(req.params.jobId);
+
+        if (!job) {
+            return res.status(404).json({ message: "Job not found" });
+        }
+
+        // Ensure that the job can only be deleted by the user who posted it
+        if (job.poster.toString() !== req.user.userId) {
+            return res.status(403).json({ message: "You are not authorized to delete this job" });
+        }
+
+        await job.remove();
+        res.status(200).json({ message: "Job deleted successfully" });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 
 // Get Jobs Based on Profession
 router.get('/api/jobs/profession', verifyToken, async (req, res) => {
@@ -108,43 +152,6 @@ router.delete('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
     }
 });
 
-
-
-// // Accept/Reject Job Request
-// router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => {
-//     try {
-//         const { action } = req.body; // 'accept' or 'reject'
-//         const job = await Job.findById(req.params.jobId);
-        
-//         if (!job) {
-//             return res.status(404).json({ message: "Job not found" });
-//         }
-
-//         // Find the index of the request made by the user
-//         const request = job.requests.find(req => req.user.toString() === req.params.userId);
-//         if (!request) {
-//             return res.status(400).json({ message: "Job request not found" });
-//         }
-
-//         // Perform action based on the provided action
-//         if (action === 'accept') {
-//             // Move request from requests to workers
-//             job.workers.push({ user: request.user, status: 'working on' });
-//         } else if (action === 'reject') {
-//             // Simply remove the request
-//             job.requests = job.requests.filter(req => req.user.toString() !== req.params.userId);
-//         } else {
-//             return res.status(400).json({ message: "Invalid action" });
-//         }
-
-//         await job.save();
-//         res.status(200).json({ message: `Job request ${action}ed successfully` });
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
-
-
 // Get Jobs Posted by User
 router.get('/api/user/:userId/jobs', async (req, res) => {
     try {
@@ -154,16 +161,6 @@ router.get('/api/user/:userId/jobs', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
-
-// Get Job Requests
-// router.get('/api/jobs/:jobId/requests', async (req, res) => {
-//     try {
-//         const job = await Job.findById(req.params.jobId).populate('requests.user', 'name');
-//         res.status(200).json(job.requests);
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
 
 // Get Job Requests (Filter by status "requested")
 router.get('/api/jobs/:jobId/requests', async (req, res) => {
@@ -181,20 +178,6 @@ router.get('/api/jobs/:jobId/requests', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
-
-
-// Get Job Workers
-// router.get('/api/jobs/:jobId/workers', async (req, res) => {
-//     try {
-//         const job = await Job.findById(req.params.jobId).populate('workers.user', 'name');
-//         if (!job) {
-//             return res.status(404).json({ message: "Job not found" });
-//         }
-//         res.status(200).json(job.workers);
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
 
 // Get Job Workers (Filter by status "working on")
 router.get('/api/jobs/:jobId/workers', async (req, res) => {

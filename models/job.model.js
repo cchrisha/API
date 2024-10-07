@@ -8,6 +8,7 @@ const JobSchema = new Schema({
     isCrypto: { type: Boolean, default: false },
     location: { type: String, required: true },
     datePosted: { type: Date, default: Date.now },
+    description: { type: String, required: true }, //add description
     professions: [{ type: String, required: true }],
     categories: [{ type: String, required: true }],
     poster: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
