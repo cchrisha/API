@@ -40,10 +40,10 @@ const UserSchema = mongoose.Schema(
             type: Date,
             default: null, // Default is null, meaning no expiry set
         },
-        profilePicture: {
-            type: String,
-            default: null, // URL to the profile picture, default is null
-        }
+        // profilePicture: {
+        //     type: String,
+        //     default: null, // URL to the profile picture, default is null
+        // }
     },
     {
         timestamps: true,
