@@ -53,7 +53,7 @@ router.delete('/api/jobs/:jobId', verifyToken, async (req, res) => {
             return res.status(403).json({ message: "You are not authorized to delete this job" });
         }
 
-        await job.remove();
+        await job.deleteOne();  // Use deleteOne instead of remove
         res.status(200).json({ message: "Job deleted successfully" });
     } catch (e) {
         res.status(500).json({ message: e.message });
