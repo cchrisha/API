@@ -192,10 +192,10 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        user.name = location || user.name;
-        user.location = location || user.location;
-        user.contact = contact || user.contact;
-        user.profession = profession || user.profession;
+        if (name) user.name = name;
+        if (location) user.location = location;
+        if (contact) user.contact = contact;
+        if (profession) user.profession = profession;
 
         const updatedUser = await user.save();
 
