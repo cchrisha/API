@@ -1,3 +1,4 @@
+//api/index
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -5,6 +6,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
+const jobRoutes = require('./routes/jobroutes'); // Import the routes
 
 const nodemailer = require('nodemailer');
 
@@ -24,6 +26,7 @@ const generateOTP = () => {
 
 const app = express();
 app.use(express.json());
+app.use(jobRoutes); // Attach the job routes to your app
 app.use(cors());
 
 // Connect to MongoDB
@@ -74,6 +77,15 @@ app.post('/api/userSignup', async (req, res) => {
             walletAddress: user.walletAddress // Include if applicable
         });
 
+<<<<<<< HEAD
+=======
+         // Create JWT token with profession
+         const token = jwt.sign(
+            { userId: user._id, email: user.email, profession: user.profession }, // Include profession in the token
+            'your_jwt_secret', // Use your own secret key
+        );
+        
+>>>>>>> lanaCMain
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
@@ -118,11 +130,17 @@ app.post('/api/userLogin', async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
+<<<<<<< HEAD
             { userId: user._id, email: user.email }, // Payload
             'your_secret_key', 
+=======
+            { userId: user._id, email: user.email, profession: user.profession }, // Payload / Include profession in the token
+            'your_secret_key', // Secret key (use a strong secret for production)x
+>>>>>>> lanaCMain
         );
 
-        res.status(200).json({ token, message: "Login successful" });
+        res.status(200).json({ 
+            token, _id: user._id}); // Include user ID in the response 
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
@@ -182,10 +200,19 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
+<<<<<<< HEAD
         if (name) user.name = name;
         if (location) user.location = location;
         if (contact) user.contact = contact;
         if (profession) user.profession = profession;
+=======
+        user.name = location || user.name;
+        user.email = email || user.email;
+        user.location = location || user.location;
+        user.contact = contact || user.contact;
+        user.profession = profession || user.profession;
+        user.addinfo = addinfo || user.addinfo;
+>>>>>>> lanaCMain
 
         const updatedUser = await user.save();
 
