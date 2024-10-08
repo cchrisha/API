@@ -95,7 +95,8 @@ app.post('/api/userLogin', async (req, res) => {
             'your_secret_key', // Secret key (use a strong secret for production)x
         );
 
-        res.status(200).json({ token, message: "Login successful" });
+        res.status(200).json({ 
+            token, message: "Login successful", _id: user._id}); // Include user ID in the response 
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
