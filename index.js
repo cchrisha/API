@@ -176,24 +176,25 @@ app.get('/api/user', verifyToken, async (req, res) => {
 // User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     try {
-        const {name, location, contact, profession  } = req.body;
+        const { name, location, contact, profession } = req.body;
+        
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-        // Only update fields if they are provided
-        user.name = name || user.name;
-        user.location = location || user.location;
-        user.contact = contact || user.contact;
-        user.profession = profession || user.profession;
-        // user.profilePicture = profilePicture || user.profilePicture
+        if (name) user.name = name;
+        if (location) user.location = location;
+        if (contact) user.contact = contact;
+        if (profession) user.profession = profession;
 
         const updatedUser = await user.save();
-        res.status(200).json(updatedUser);
+
+        return res.status(200).json(updatedUser);
     } catch (e) {
-        res.status(500).json({ message: e.message });
+        return res.status(500).json({ message: e.message });
     }
 });
+
 
 // Change Password (inside the app)
 app.put('/api/changePassword', verifyToken, async (req, res) => {
