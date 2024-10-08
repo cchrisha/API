@@ -77,15 +77,12 @@ app.post('/api/userSignup', async (req, res) => {
             walletAddress: user.walletAddress // Include if applicable
         });
 
-<<<<<<< HEAD
-=======
          // Create JWT token with profession
          const token = jwt.sign(
             { userId: user._id, email: user.email, profession: user.profession }, // Include profession in the token
             'your_jwt_secret', // Use your own secret key
         );
         
->>>>>>> lanaCMain
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
@@ -130,13 +127,8 @@ app.post('/api/userLogin', async (req, res) => {
 
         // Generate JWT token
         const token = jwt.sign(
-<<<<<<< HEAD
-            { userId: user._id, email: user.email }, // Payload
-            'your_secret_key', 
-=======
             { userId: user._id, email: user.email, profession: user.profession }, // Payload / Include profession in the token
             'your_secret_key', // Secret key (use a strong secret for production)x
->>>>>>> lanaCMain
         );
 
         res.status(200).json({ 
@@ -200,19 +192,10 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
         if (!user) {
             return res.status(404).json({ message: "User not found" });
         }
-<<<<<<< HEAD
-        if (name) user.name = name;
-        if (location) user.location = location;
-        if (contact) user.contact = contact;
-        if (profession) user.profession = profession;
-=======
         user.name = location || user.name;
-        user.email = email || user.email;
         user.location = location || user.location;
         user.contact = contact || user.contact;
         user.profession = profession || user.profession;
-        user.addinfo = addinfo || user.addinfo;
->>>>>>> lanaCMain
 
         const updatedUser = await user.save();
 
