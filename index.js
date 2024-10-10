@@ -9,6 +9,27 @@ const verifyToken = require('./middleware/auth');
 const jobRoutes = require('./routes/jobroutes'); // Import the routes
 
 const nodemailer = require('nodemailer');
+const cloudinary = require('cloudinary').v2;
+const multer = require('multer');
+const path = require('path');
+
+// Configure Cloudinary
+cloudinary.config({
+    cloud_name: 'dx5reijcv',
+    api_key: '965642287997112',
+    api_secret: 'ZAKzzFiwyo_ggjVEFvmzZ6hIHVUt'
+});
+
+// Set up multer for handling file uploads
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, './uploads/'); // You can choose where to store uploaded images temporarily
+    },
+    filename: function (req, file, cb) {
+        cb(null, Date.now() + path.extname(file.originalname)); // Rename the file with a timestamp
+    }
+});
+const upload = multer({ storage: storage });
 
 // Configure nodemailer transporter
 const transporter = nodemailer.createTransport({
@@ -182,6 +203,41 @@ app.get('/api/user', verifyToken, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
+//profile picture
+app.post('/api/uploadProfilePicture', verifyToken, upload.single('profilePicture'), async (req, res) => {
+    try {
+        // Check if a file is uploaded
+        if (!req.file) {
+            return res.status(400).json({ message: 'No file uploaded' });
+        }
+
+        // Upload the file to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'user_profile_pictures', // Specify a folder in your Cloudinary account
+            public_id: `${req.user.userId}_profile`, // Optional: Name the file as userId_profile
+            overwrite: true, // Overwrite the existing file if any
+        });
+
+        // Update user's profilePicture URL in the database
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.profilePicture = result.secure_url; // Save the Cloudinary URL
+        await user.save();
+
+        // Respond with the updated user data
+        res.status(200).json({
+            message: 'Profile picture uploaded successfully',
+            profilePicture: user.profilePicture
+        });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 
 // User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
