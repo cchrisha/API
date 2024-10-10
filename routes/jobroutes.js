@@ -98,7 +98,7 @@ router.get('/api/jobs/recent', async (req, res) => {
 });
 
 // Get All Jobs
-router.get('/api/jobs', async (req, res) => {
+router.get('/api/alljobs', async (req, res) => {
     try {
         const jobs = await Job.find().populate('poster', 'name');
         res.status(200).json(jobs);
