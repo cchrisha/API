@@ -91,37 +91,33 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
-app.put('/api/walletAddress', async (req, res) => {
-    try {
-        const { email, walletAddress } = req.body; // Only walletAddress should be provided for PUT
-
-        // Check if user exists
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ message: "User not found" });
-        }
-
-        // Update the user's wallet address
-        user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
-        await user.save(); // Save the updated user document
-
-        res.status(200).json({ message: "Wallet address updated successfully", walletAddress: user.walletAddress });
-    } catch (e) {
-        console.error(e); // Log the error for debugging
-        res.status(500).json({ message: e.message });
-    }
-});
-
+    app.put('/api/users/:userId', async (req, res) => {
+        const { userId } = req.params; // Get user ID from the URL
+        const { walletAddress } = req.body; // Get wallet address from request body
     
-
+        try {
+            // Update the user's wallet address
+            const user = await User.findByIdAndUpdate(
+                userId,
+                { walletAddress: walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
+                { new: true } // Return the updated document
+            );
+    
+            // Check if user was found and updated
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+    
+            res.status(200).json(user); // Return the updated user
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    });
+    
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
-        const { email, password, walletAddress } = req.body; // walletAddress can be optional
-
-        // Log inputs for debugging
-        console.log('Email:', email);
-        console.log('Password:', password);
+        const { email, password, walletAddress } = req.body; // Add walletAddress
 
         // Check if user exists
         const user = await User.findOne({ email });
@@ -144,12 +140,11 @@ app.post('/api/userLogin', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email },
-            'your_secret_key', // Consider using process.env.JWT_SECRET
+            'your_secret_key',
         );
 
-        res.status(200).json({ token, message: "Login successful", walletAddress: user.walletAddress });
+        res.status(200).json({ token, message: "Login successful" });
     } catch (e) {
-        console.error(e); // Log the error for debugging
         res.status(500).json({ message: e.message });
     }
 });
