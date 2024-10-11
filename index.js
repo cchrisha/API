@@ -95,6 +95,7 @@ app.post('/api/userSignup', async (req, res) => {
 app.post('/api/userLogin', async (req, res) => {
     try {
         const { email, password, walletAddress } = req.body; // Add walletAddress
+        console.log("Received wallet address:", walletAddress); // Log the received wallet address
 
         // Check if user exists
         const user = await User.findOne({ email });
@@ -111,21 +112,29 @@ app.post('/api/userLogin', async (req, res) => {
         // Update the user's wallet address if it's provided
         if (walletAddress) {
             user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
-            await user.save(); // Save the updated user document
+            try {
+                await user.save(); // Save the updated user document
+                console.log("User updated successfully:", user);
+            } catch (error) {
+                console.error("Error updating user:", error);
+                return res.status(500).json({ message: "Failed to update wallet address." });
+            }
+        } else {
+            console.log("No wallet address provided.");
         }
 
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email },
-            process.env.JWT_SECRET, // Use environment variable for security
-            { expiresIn: '1h' } // Optional: Set an expiration for the token
+            'your_secret_key',
         );
 
         res.status(200).json({ token, message: "Login successful" });
     } catch (e) {
-        res.status(500).json({ message: "An error occurred during login." });
+        res.status(500).json({ message: e.message });
     }
 });
+
 
 
 
