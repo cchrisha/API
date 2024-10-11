@@ -120,7 +120,7 @@ app.post('/api/userLogin', async (req, res) => {
     }
 });
 
-app.post('/api/update-wallet', async (req, res) => {
+app.put('/api/update-wallet', async (req, res) => {
     const { email, walletAddress } = req.body; // Expecting email and walletAddress in request body
   
     try {
