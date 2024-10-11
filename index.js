@@ -93,36 +93,33 @@ app.post('/api/userSignup', async (req, res) => {
 
 app.put('/api/walletAddress', async (req, res) => {
     try {
-        const { email, walletAddress } = req.body;
+        const { email, walletAddress } = req.body; // Only walletAddress should be provided for PUT
 
-        // Validate the input
-        if (!email || !walletAddress) {
-            return res.status(400).json({ message: "Email and wallet address are required." });
-        }
-
-        // Find the user
+        // Check if user exists
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({ message: "User not found" });
+            return res.status(400).json({ message: "User not found" });
         }
 
-        // Update the wallet address
-        user.walletAddress = walletAddress;
-        await user.save();
+        // Update the user's wallet address
+        user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
+        await user.save(); // Save the updated user document
 
         res.status(200).json({ message: "Wallet address updated successfully", walletAddress: user.walletAddress });
     } catch (e) {
+        console.error(e); // Log the error for debugging
         res.status(500).json({ message: e.message });
     }
 });
+
     
 
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
-        const { email, password, walletAddress } = req.body;
+        const { email, password, walletAddress } = req.body; // walletAddress can be optional
 
-        // Log input for debugging
+        // Log inputs for debugging
         console.log('Email:', email);
         console.log('Password:', password);
 
@@ -140,28 +137,22 @@ app.post('/api/userLogin', async (req, res) => {
 
         // Update the user's wallet address if it's provided
         if (walletAddress) {
-            user.walletAddress = walletAddress;
-            await user.save();
+            user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
+            await user.save(); // Save the updated user document
         }
 
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email },
-            process.env.JWT_SECRET,
+            'your_secret_key', // Consider using process.env.JWT_SECRET
         );
 
-        res.status(200).json({
-            token,
-            message: "Login successful",
-            walletAddress: user.walletAddress
-        });
+        res.status(200).json({ token, message: "Login successful", walletAddress: user.walletAddress });
     } catch (e) {
         console.error(e); // Log the error for debugging
         res.status(500).json({ message: e.message });
     }
 });
-
-
 
 
 // Get User Profile
