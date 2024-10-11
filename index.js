@@ -93,26 +93,29 @@ app.post('/api/userSignup', async (req, res) => {
 
     app.put('/api/users/:id', async (req, res) => {
         try {
-            const userId = req.params.id; // Get the user ID from the route parameters
-            const { walletAddress } = req.body; // Get the new wallet address from the request body
+            const userId = req.params.id;
+            const { walletAddress } = req.body;
     
-            // Find the user by ID and update their wallet address
+            console.log("User ID:", userId);
+            console.log("Wallet Address:", walletAddress);
+    
             const updatedUser = await User.findByIdAndUpdate(
                 userId, 
-                { walletAddress }, // Update only the walletAddress
-                { new: true, runValidators: true } // Return the updated user and validate the schema
+                { walletAddress }, 
+                { new: true, runValidators: true }
             );
     
             if (!updatedUser) {
                 return res.status(404).json({ message: 'User not found' });
             }
     
-            // Return the updated user
             res.status(200).json(updatedUser);
         } catch (error) {
+            console.error("Error updating user:", error.message);
             res.status(500).json({ message: error.message });
         }
     });
+    
     
 
 // Login 
