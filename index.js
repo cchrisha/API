@@ -131,10 +131,15 @@ app.route('/api/userLogin')
         try {
             const { email, walletAddress } = req.body; // Only walletAddress should be provided for PUT
 
+            // Validate the wallet address
+            if (!walletAddress) {
+                return res.status(400).json({ message: "Wallet address is required" });
+            }
+
             // Check if user exists
             const user = await User.findOne({ email });
             if (!user) {
-                return res.status(400).json({ message: "User not found" });
+                return res.status(404).json({ message: "User not found" }); // 404 for not found
             }
 
             // Update the user's wallet address
