@@ -77,80 +77,80 @@ app.post('/api/userSignup', async (req, res) => {
     }
 });
 
-// Get All Users
-app.get('/api/users', async (req, res) => {
-    try {
-        // Fetch all users from the database
-        const users = await User.find({}); // Adjust the filter if needed
-
-        // Return the list of users
-        res.status(200).json(users);
-    } catch (e) {
-        // Handle any errors
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// Login 
-app.route('/api/userLogin')
-    .post(async (req, res) => { // Handle user login
+    // Get All Users
+    app.get('/api/users', async (req, res) => {
         try {
-            const { email, password, walletAddress } = req.body; // walletAddress can be optional
+            // Fetch all users from the database
+            const users = await User.find({}); // Adjust the filter if needed
 
-            // Check if user exists
-            const user = await User.findOne({ email });
-            if (!user) {
-                return res.status(400).json({ message: "Invalid credentials" });
-            }
-
-            // Compare provided password with stored hashed password
-            const isMatch = await bcrypt.compare(password, user.password);
-            if (!isMatch) {
-                return res.status(400).json({ message: "Invalid credentials" });
-            }
-
-            // Update the user's wallet address if it's provided
-            if (walletAddress) {
-                user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
-                await user.save(); // Save the updated user document
-            }
-
-            // Generate JWT token
-            const token = jwt.sign(
-                { userId: user._id, email: user.email },
-                'your_secret_key',
-                { expiresIn: '1h' } // Optional: Set token expiration
-            );
-
-            res.status(200).json({ token, message: "Login successful", walletAddress: user.walletAddress });
+            // Return the list of users
+            res.status(200).json(users);
         } catch (e) {
-            res.status(500).json({ message: e.message });
-        }
-    })
-    .put(async (req, res) => { // Handle wallet address update only
-        try {
-            const { email, walletAddress } = req.body; // Only walletAddress should be provided for PUT
-
-            // Validate the wallet address
-            if (!walletAddress) {
-                return res.status(400).json({ message: "Wallet address is required" });
-            }
-
-            // Check if user exists
-            const user = await User.findOne({ email });
-            if (!user) {
-                return res.status(404).json({ message: "User not found" }); // 404 for not found
-            }
-
-            // Update the user's wallet address
-            user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
-            await user.save(); // Save the updated user document
-
-            res.status(200).json({ message: "Wallet address updated successfully", walletAddress: user.walletAddress });
-        } catch (e) {
+            // Handle any errors
             res.status(500).json({ message: e.message });
         }
     });
+
+app.put('/api/walletAddress', async (req, res) => {
+    try {
+        const { email, walletAddress } = req.body;
+
+        // Validate the input
+        if (!email || !walletAddress) {
+            return res.status(400).json({ message: "Email and wallet address are required." });
+        }
+
+        // Find the user
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Update the wallet address
+        user.walletAddress = walletAddress;
+        await user.save();
+
+        res.status(200).json({ message: "Wallet address updated successfully", walletAddress: user.walletAddress });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+    
+
+// Login 
+app.post('/api/userLogin', async (req, res) => {
+    try {
+        const { email, password, walletAddress } = req.body; // Add walletAddress
+
+        // Check if user exists
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+        // Compare provided password with stored hashed password
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) {
+            return res.status(400).json({ message: "Invalid credentials" });
+        }
+
+        // Update the user's wallet address if it's provided
+        if (walletAddress) {
+            user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
+            await user.save(); // Save the updated user document
+        }
+
+        // Generate JWT token
+        const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            'your_secret_key',
+        );
+
+        res.status(200).json({ token, message: "Login successful" });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
 
 
 // Get User Profile
