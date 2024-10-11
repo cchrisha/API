@@ -91,7 +91,7 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
-    app.put('/api/users/_id', async (req, res) => {
+    app.get('/api/users/_id', async (req, res) => {
         try {
             const userId = req.params.id;
             const { walletAddress } = req.body;
