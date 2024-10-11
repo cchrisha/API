@@ -103,7 +103,7 @@ mongoose.connect("mongodb+srv://repatochrishamae:b2bZiRmYya0PmASm@authapi.2xnlj.
 // Create account (Sign up)
 app.post('/api/userSignup', async (req, res) => {
     try {
-        const { name, email, password, location, contact, profession  } = req.body;
+        const { name, email, password, location, contact, profession } = req.body;
         if (!name || !email || !password || !location || !contact || !profession) {
             return res.status(400).json({ message: "All fields are required" });
         }
@@ -121,8 +121,8 @@ app.post('/api/userSignup', async (req, res) => {
             password: hashedPassword,
             location,
             contact,
-            profession,
             // profilePicture 
+            profession
         });
 
         res.status(201).json({
@@ -161,10 +161,33 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
+    app.put('/api/users', verifyToken ,async (req, res) => {
+        const { userId } = req.params; // Get user ID from the URL
+        const { walletAddress } = req.body; // Get wallet address from request body
+    
+        try {
+            // Update the user's wallet address
+            const user = await User.findByIdAndUpdate(
+                userId,
+                { walletAddress: walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
+                { new: true } // Return the updated document
+            );
+    
+            // Check if user was found and updated
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+    
+            res.status(200).json(user); // Return the updated user
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    });
+
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
-        const { email, password, walletAddress } = req.body;
+        const { email, password, walletAddress } = req.body; // Add walletAddress
 
         // Check if user exists
         const user = await User.findOne({ email });
@@ -178,16 +201,16 @@ app.post('/api/userLogin', async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
-         // Check if wallet address is provided and update user
-         if (walletAddress && user.walletAddress !== walletAddress) {
-            user.walletAddress = walletAddress; // Save the wallet address
-            await user.save();
+        // Update the user's wallet address if it's provided
+        if (walletAddress) {
+            user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
+            await user.save(); // Save the updated user document
         }
 
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email, profession: user.profession }, // Payload / Include profession in the token
-            'your_secret_key', // Secret key (use a strong secret for production)x
+            'your_secret_key', // Secret key (use a strong secret for production)
         );
 
         res.status(200).json({ 
@@ -197,25 +220,6 @@ app.post('/api/userLogin', async (req, res) => {
     }
 });
 
-    app.post('/api/userUpdate', async (req, res) => {
-        try {
-        const { walletAddress } = req.body;
-        const userId = req.user.id; // Assuming you have user ID from the token
-    
-        // Find the user and update the wallet address
-        const user = await User.findById(userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-    
-        user.walletAddress = walletAddress; // Update wallet address
-        await user.save();
-    
-        res.status(200).json({ message: "Wallet address updated successfully" });
-        } catch (e) {
-        res.status(500).json({ message: e.message });
-        }
-    });
 
 // Get User Profile
 app.get('/api/user', verifyToken, async (req, res) => {
@@ -236,6 +240,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
             profession: user.profession,
             profilePicture: user.profilePicture,
             // walletAddress: user.walletAddress // Include if applicable
+            walletAddress: user.walletAddress // Include if applicable
         });
     } catch (e) {
         res.status(500).json({ message: e.message });
@@ -246,7 +251,6 @@ app.get('/api/user', verifyToken, async (req, res) => {
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     try {
         const { name, location, contact, profession } = req.body;
-        
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.status(404).json({ message: "User not found" });
@@ -255,7 +259,6 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
         if (location) user.location = location;
         if (contact) user.contact = contact;
         if (profession) user.profession = profession;
-
         const updatedUser = await user.save();
 
         return res.status(200).json(updatedUser);
