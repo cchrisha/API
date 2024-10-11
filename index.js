@@ -238,6 +238,16 @@ app.post('/api/uploadProfilePicture', verifyToken, upload.single('profilePicture
     }
 });
 
+app.get('/api/getProfilePicture/:userId', async (req, res) => {
+    const userId = req.params.userId;
+    // Fetch the user's profile data from your database
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).send('User not found');
+    }
+    res.json({ profilePicture: user.profilePicture });
+  });
+  
 
 // User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
