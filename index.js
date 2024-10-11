@@ -17,25 +17,6 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-// Middleware to verify token
-const verifyToken = (req, res, next) => {
-    const token = req.headers['authorization'];
-
-    if (!token) {
-        return res.status(403).json({ message: 'No token provided.' });
-    }
-
-    jwt.verify(token, 'your_secret_key', (err, decoded) => {
-        if (err) {
-            return res.status(401).json({ message: 'Failed to authenticate token.' });
-        }
-        
-        // Attach user ID to the request object
-        req.user = decoded;
-        next();
-    });
-};
-
 // Function to generate a random 6-digit OTP
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
@@ -136,35 +117,17 @@ app.post('/api/userLogin', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email },
-            'your_secret_key',
+            process.env.JWT_SECRET, // Use environment variable for security
+            { expiresIn: '1h' } // Optional: Set an expiration for the token
         );
 
         res.status(200).json({ token, message: "Login successful" });
     } catch (e) {
-        res.status(500).json({ message: e.message });
+        res.status(500).json({ message: "An error occurred during login." });
     }
 });
 
-// Update Wallet Address
-app.post('/api/updateWalletAddress', verifyToken, async (req, res) => {
-    try {
-        const { walletAddress } = req.body;
-        
-        // Fetch the user based on the ID decoded from the token
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
 
-        // Update the wallet address
-        user.walletAddress = walletAddress;
-        await user.save();
-
-        res.status(200).json({ message: "Wallet address updated successfully", walletAddress });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
 
 // Get User Profile
 app.get('/api/user', verifyToken, async (req, res) => {
@@ -190,7 +153,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
     }
 });
 
-// User Profile Update  
+// User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     try {
         const {name, location, contact, profession } = req.body;
