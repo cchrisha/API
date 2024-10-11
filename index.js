@@ -17,6 +17,25 @@ const transporter = nodemailer.createTransport({
     }
 });
 
+// Middleware to verify token
+const verifyToken = (req, res, next) => {
+    const token = req.headers['authorization'];
+
+    if (!token) {
+        return res.status(403).json({ message: 'No token provided.' });
+    }
+
+    jwt.verify(token, 'your_secret_key', (err, decoded) => {
+        if (err) {
+            return res.status(401).json({ message: 'Failed to authenticate token.' });
+        }
+        
+        // Attach user ID to the request object
+        req.user = decoded;
+        next();
+    });
+};
+
 // Function to generate a random 6-digit OTP
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
@@ -126,30 +145,26 @@ app.post('/api/userLogin', async (req, res) => {
     }
 });
 
-// POST for /api/updateWalletAddress
-app.post('/api/updateWalletAddress', async (req, res) => {
-    const { userId, walletAddress } = req.body; 
-  
-    if (!userId || !walletAddress) {
-      return res.status(400).json({ message: 'userId and walletAddress are required' });
-    }
-  
+// Update Wallet Address
+app.post('/api/updateWalletAddress', verifyToken, async (req, res) => {
     try {
-      const user = await User.findOneAndUpdate(
-        { userId: userId },
-        { walletAddress: walletAddress },
-        { new: true, upsert: true } 
-      );
-  
-      // Send success response
-      return res.status(200).json({ message: 'Wallet address updated successfully', user });
-    } catch (error) {
-      // Handle errors
-      console.error('Error updating wallet address:', error);
-      return res.status(500).json({ message: 'Server error', error: error.message });
-    }
-  });
+        const { walletAddress } = req.body;
+        
+        // Fetch the user based on the ID decoded from the token
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
+        // Update the wallet address
+        user.walletAddress = walletAddress;
+        await user.save();
+
+        res.status(200).json({ message: "Wallet address updated successfully", walletAddress });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
 
 // Get User Profile
 app.get('/api/user', verifyToken, async (req, res) => {
@@ -175,7 +190,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
     }
 });
 
-// User Profile Update
+// User Profile Update  
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     try {
         const {name, location, contact, profession } = req.body;
