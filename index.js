@@ -165,26 +165,30 @@ app.post('/api/userSignup', async (req, res) => {
         const { walletAddress } = req.body; // Get wallet address from request body
         
         try {
-            // Use the userId extracted from the token (decoded by the verifyToken middleware)
-            const userId = req.user.userId; 
+            // Check if the wallet address already exists for another user
+            const existingUser = await User.findOne({ walletAddress });
+            if (existingUser) {
+                return res.status(400).json({ message: 'This wallet address is already associated with another account. Please try another.' });
+            }
     
             // Update the user's wallet address
-            const updatedUser = await User.findByIdAndUpdate(
-                userId,  // This should be the user's ObjectId (from the token)
-                { walletAddress: walletAddress, updatedAt: new Date() },  // Update walletAddress and timestamp
-                { new: true, runValidators: true }  // Return the updated document and validate it
+            const user = await User.findByIdAndUpdate(
+                req.user.userId, // Use the ID from the token
+                { walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
+                { new: true, runValidators: true } // Return the updated document and validate
             );
     
-            // Check if the user was found and updated
-            if (!updatedUser) {
+            // Check if user was found and updated
+            if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
     
-            res.status(200).json(updatedUser);  // Return the updated user
+            res.status(200).json(user); // Return the updated user
         } catch (e) {
             res.status(500).json({ message: e.message });
         }
     });
+    
     
 // Login 
 app.post('/api/userLogin', async (req, res) => {
