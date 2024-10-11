@@ -207,33 +207,32 @@ app.get('/api/user', verifyToken, async (req, res) => {
 //profile picture
 app.post('/api/uploadProfilePicture', verifyToken, upload.single('profilePicture'), async (req, res) => {
     try {
-        // Check if a file is uploaded
         if (!req.file) {
             return res.status(400).json({ message: 'No file uploaded' });
         }
 
-        // Upload the file to Cloudinary
+        console.log('File uploaded:', req.file.path); // Log the file path
+
         const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'user_profile_pictures', // Specify a folder in your Cloudinary account
-            public_id: `${req.user.userId}_profile`, // Optional: Name the file as userId_profile
-            overwrite: true, // Overwrite the existing file if any
+            folder: 'user_profile_pictures',
+            public_id: `${req.user.userId}_profile`,
+            overwrite: true,
         });
 
-        // Update user's profilePicture URL in the database
         const user = await User.findById(req.user.userId);
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
         }
 
-        user.profilePicture = result.secure_url; // Save the Cloudinary URL
+        user.profilePicture = result.secure_url;
         await user.save();
 
-        // Respond with the updated user data
         res.status(200).json({
             message: 'Profile picture uploaded successfully',
             profilePicture: user.profilePicture
         });
     } catch (e) {
+        console.error('Error during file upload:', e.message); // Log the error message
         res.status(500).json({ message: e.message });
     }
 });
