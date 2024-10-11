@@ -91,7 +91,7 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
-    app.put('/api/users/:id', async (req, res) => {
+    app.put('/api/users/:_id', async (req, res) => {
         try {
             const userId = req.params.id; // Get the user ID from the route parameters
             const { walletAddress } = req.body; // Get the new wallet address from the request body
