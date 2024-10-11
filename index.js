@@ -91,14 +91,11 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
-    app.put('/api/users/:id', async (req, res) => {
+    app.put('/api/useers/:id', async (req, res) => {
         try {
             const userId = req.params.id;
             const { walletAddress } = req.body;
-    
-            console.log("User ID:", userId);
-            console.log("Wallet Address:", walletAddress);
-    
+     
             const updatedUser = await User.findByIdAndUpdate(
                 userId, 
                 { walletAddress }, 
