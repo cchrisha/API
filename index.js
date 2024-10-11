@@ -123,19 +123,6 @@ app.post('/api/userLogin', async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
-        // Update the user's wallet address if it's provided
-        if (walletAddress) {
-            user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
-            try {
-                await user.save(); // Save the updated user document
-                console.log("User updated successfully:", user);
-            } catch (error) {
-                console.error("Error updating user:", error);
-                return res.status(500).json({ message: "Failed to update wallet address." });
-            }
-        } else {
-            console.log("No wallet address provided.");
-        }
 
         // Generate JWT token
         const token = jwt.sign(
@@ -150,7 +137,27 @@ app.post('/api/userLogin', async (req, res) => {
 });
 
 
-
+app.post('/api/update-wallet', async (req, res) => {
+    const { email, walletAddress } = req.body; // Change from username to email
+  
+    try {
+      // Update user wallet address
+      const user = await User.findOneAndUpdate(
+        { email: email }, // Find the user by email
+        { walletAddress: walletAddress }, // Update the wallet address
+        { new: true } // Return the updated user
+      );
+  
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      res.status(200).json({ message: 'Wallet address updated successfully', user });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: 'Server error', error });
+    }
+  });
 
 // Get User Profile
 app.get('/api/user', verifyToken, async (req, res) => {
