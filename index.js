@@ -162,13 +162,11 @@ app.post('/api/userSignup', async (req, res) => {
     });
 
     app.put('/api/users', verifyToken ,async (req, res) => {
-        const { userId } = req.params; // Get user ID from the URL
         const { walletAddress } = req.body; // Get wallet address from request body
     
         try {
             // Update the user's wallet address
             const user = await User.findByIdAndUpdate(
-                userId,
                 { walletAddress: walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
                 { new: true } // Return the updated document
             );
