@@ -6,10 +6,74 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
+const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); // Import the routes
 
 const nodemailer = require('nodemailer');
+const app = express();
+app.use(express.json());
+app.use(jobRoutes); // Attach the job routes to your app
+app.use(cors());
 
+
+// Configure Cloudinary with your credentials
+cloudinary.config({
+    cloud_name: 'dx5reijcv',
+    api_key: '965642287997112',
+    api_secret: 'ZAKzzFiwyo_ggjVEFvmzZ6hIHVU',
+  });
+  
+  const multer = require('multer');
+  const { CloudinaryStorage } = require('multer-storage-cloudinary');
+  
+  // Set up Cloudinary storage
+  const storage = new CloudinaryStorage({
+      cloudinary: cloudinary,
+      params: {
+          folder: 'pfp', 
+          allowedFormats: ['jpg', 'png', 'jpeg', 'gif'], 
+      },
+  });
+  
+  // Initialize multer with Cloudinary storage
+  const upload = multer({ storage: storage });
+
+  // Image Upload 
+app.post('/api/uploadImage',verifyToken, upload.single('image'), async (req, res) => {
+    try {
+        
+        const imageUrl = req.file.path; 
+        const user = await User.findById(req.user.userId);
+        user.profilePicture = imageUrl; 
+        await user.save();
+
+        res.status(200).json({
+            message: 'Image uploaded successfully',
+            imageUrl: imageUrl,
+        });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// Fetch Profile Picture
+app.get('/api/profilePicture', verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.userId || req.user._id; 
+        const user = await User.findById(userId); 
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        res.status(200).json({
+            profilePicture: user.profilePicture || null, 
+        });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+  
 // Configure nodemailer transporter
 const transporter = nodemailer.createTransport({
     service: 'gmail',
@@ -23,11 +87,6 @@ const transporter = nodemailer.createTransport({
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
 };
-
-const app = express();
-app.use(express.json());
-app.use(jobRoutes); // Attach the job routes to your app
-app.use(cors());
 
 // Connect to MongoDB
 mongoose.connect("mongodb+srv://repatochrishamae:b2bZiRmYya0PmASm@authapi.2xnlj.mongodb.net/?retryWrites=true&w=majority&appName=authAPI")
