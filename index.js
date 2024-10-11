@@ -91,25 +91,10 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
-    app.post('/api/checkAddress', (req, res) => {
-        const { walletAddress } = req.body;
-    
-        // Check if walletAddress is provided
-        if (!walletAddress) {
-            return res.status(400).json({ message: 'Wallet address is required.' });
-        }
-    
-        // Check if the wallet address already exists
-        const isUnique = !users.includes(walletAddress);
-        
-        res.status(200).json({ isUnique });
-    });
-    
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
         const { email, password, walletAddress } = req.body; // Add walletAddress
-        console.log("Received wallet address:", walletAddress); // Log the received wallet address
 
         // Check if user exists
         const user = await User.findOne({ email });
@@ -123,7 +108,6 @@ app.post('/api/userLogin', async (req, res) => {
             return res.status(400).json({ message: "Invalid credentials" });
         }
 
-
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email },
@@ -136,9 +120,8 @@ app.post('/api/userLogin', async (req, res) => {
     }
 });
 
-
 app.post('/api/update-wallet', async (req, res) => {
-    const { email, walletAddress } = req.body; // Change from username to email
+    const { email, walletAddress } = req.body; // Expecting email and walletAddress in request body
   
     try {
       // Update user wallet address
@@ -158,6 +141,7 @@ app.post('/api/update-wallet', async (req, res) => {
       res.status(500).json({ message: 'Server error', error });
     }
   });
+
 
 // Get User Profile
 app.get('/api/user', verifyToken, async (req, res) => {
