@@ -77,70 +77,75 @@ app.post('/api/userSignup', async (req, res) => {
     }
 });
 
-    // Get All Users
-    app.get('/api/users', async (req, res) => {
-        try {
-            // Fetch all users from the database
-            const users = await User.find({}); // Adjust the filter if needed
-
-            // Return the list of users
-            res.status(200).json(users);
-        } catch (e) {
-            // Handle any errors
-            res.status(500).json({ message: e.message });
-        }
-    });
-
-// Login 
-app.post('/api/userLogin', async (req, res) => {
+// Get All Users
+app.get('/api/users', async (req, res) => {
     try {
-        const { email, password, walletAddress } = req.body; // Add walletAddress
+        // Fetch all users from the database
+        const users = await User.find({}); // Adjust the filter if needed
 
-        // Check if user exists
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(400).json({ message: "Invalid credentials" });
-        }
-
-        // Compare provided password with stored hashed password
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) {
-            return res.status(400).json({ message: "Invalid credentials" });
-        }
-
-        // Generate JWT token
-        const token = jwt.sign(
-            { userId: user._id, email: user.email },
-            'your_secret_key',
-        );
-
-        res.status(200).json({ token, message: "Login successful" });
+        // Return the list of users
+        res.status(200).json(users);
     } catch (e) {
+        // Handle any errors
         res.status(500).json({ message: e.message });
     }
 });
 
-app.put('/api/update-wallet', async (req, res) => {
-    const { email, walletAddress } = req.body; // Expecting email and walletAddress in request body
-  
-    try {
-      // Update user wallet address
-      const user = await User.findOneAndUpdate(
-        { email: email }, // Find the user by email
-        { walletAddress: walletAddress }, // Update the wallet address
-        { new: true } // Return the updated user
-      );
-  
-      if (!user) {
-        return res.status(404).json({ message: 'User not found' });
-      }
-  
-      res.status(200).json({ message: 'Wallet address updated successfully', user });
-    } catch (error) {
-      console.error(error);
-      res.status(500).json({ message: 'Server error', error });
-    }
-  });
+// Login 
+app.route('/api/userLogin')
+    .post(async (req, res) => { // Handle user login
+        try {
+            const { email, password, walletAddress } = req.body; // walletAddress can be optional
+
+            // Check if user exists
+            const user = await User.findOne({ email });
+            if (!user) {
+                return res.status(400).json({ message: "Invalid credentials" });
+            }
+
+            // Compare provided password with stored hashed password
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) {
+                return res.status(400).json({ message: "Invalid credentials" });
+            }
+
+            // Update the user's wallet address if it's provided
+            if (walletAddress) {
+                user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
+                await user.save(); // Save the updated user document
+            }
+
+            // Generate JWT token
+            const token = jwt.sign(
+                { userId: user._id, email: user.email },
+                'your_secret_key',
+                { expiresIn: '1h' } // Optional: Set token expiration
+            );
+
+            res.status(200).json({ token, message: "Login successful", walletAddress: user.walletAddress });
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    })
+    .put(async (req, res) => { // Handle wallet address update only
+        try {
+            const { email, walletAddress } = req.body; // Only walletAddress should be provided for PUT
+
+            // Check if user exists
+            const user = await User.findOne({ email });
+            if (!user) {
+                return res.status(400).json({ message: "User not found" });
+            }
+
+            // Update the user's wallet address
+            user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
+            await user.save(); // Save the updated user document
+
+            res.status(200).json({ message: "Wallet address updated successfully", walletAddress: user.walletAddress });
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    });
 
 
 // Get User Profile
