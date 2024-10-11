@@ -120,12 +120,11 @@ app.put('/api/walletAddress', async (req, res) => {
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
-        const { email, password, walletAddress } = req.body; // Add walletAddress
+        const { email, password, walletAddress } = req.body;
 
-        // Validate input (optional but recommended)
-        if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required" });
-        }
+        // Log input for debugging
+        console.log('Email:', email);
+        console.log('Password:', password);
 
         // Check if user exists
         const user = await User.findOne({ email });
@@ -141,25 +140,27 @@ app.post('/api/userLogin', async (req, res) => {
 
         // Update the user's wallet address if it's provided
         if (walletAddress) {
-            user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
-            await user.save(); // Save the updated user document
+            user.walletAddress = walletAddress;
+            await user.save();
         }
 
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email },
-            process.env.JWT_SECRET, // Use an environment variable
+            process.env.JWT_SECRET,
         );
 
         res.status(200).json({
             token,
             message: "Login successful",
-            walletAddress: user.walletAddress // Optionally include the wallet address in the response
+            walletAddress: user.walletAddress
         });
     } catch (e) {
+        console.error(e); // Log the error for debugging
         res.status(500).json({ message: e.message });
     }
 });
+
 
 
 
