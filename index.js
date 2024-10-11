@@ -91,30 +91,28 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
-    app.put('/api/useers/:id', async (req, res) => {
+    app.put('/api/users/:userId', async (req, res) => {
+        const { userId } = req.params; // Get user ID from the URL
+        const { walletAddress } = req.body; // Get wallet address from request body
+    
         try {
-            const userId = req.params.id;
-            const { walletAddress } = req.body;
-     
-            const updatedUser = await User.findByIdAndUpdate(
-                userId, 
-                { walletAddress }, 
-                { new: true, runValidators: true }
+            // Update the user's wallet address
+            const user = await User.findByIdAndUpdate(
+                userId,
+                { walletAddress: walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
+                { new: true } // Return the updated document
             );
     
-            if (!updatedUser) {
+            // Check if user was found and updated
+            if (!user) {
                 return res.status(404).json({ message: 'User not found' });
             }
     
-            res.status(200).json(updatedUser);
-        } catch (error) {
-            console.error("Error updating user:", error.message);
-            res.status(500).json({ message: error.message });
+            res.status(200).json(user); // Return the updated user
+        } catch (e) {
+            res.status(500).json({ message: e.message });
         }
     });
-    
-    
-
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
