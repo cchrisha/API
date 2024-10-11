@@ -122,6 +122,11 @@ app.post('/api/userLogin', async (req, res) => {
     try {
         const { email, password, walletAddress } = req.body; // Add walletAddress
 
+        // Validate input (optional but recommended)
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required" });
+        }
+
         // Check if user exists
         const user = await User.findOne({ email });
         if (!user) {
@@ -143,14 +148,19 @@ app.post('/api/userLogin', async (req, res) => {
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email },
-            'your_secret_key',
+            process.env.JWT_SECRET, // Use an environment variable
         );
 
-        res.status(200).json({ token, message: "Login successful" });
+        res.status(200).json({
+            token,
+            message: "Login successful",
+            walletAddress: user.walletAddress // Optionally include the wallet address in the response
+        });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+
 
 
 // Get User Profile
