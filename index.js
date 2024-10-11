@@ -91,7 +91,7 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
-    app.put('/api/users/:userId', async (req, res) => {
+    app.put('/api/users', verifyToken ,async (req, res) => {
         const { userId } = req.params; // Get user ID from the URL
         const { walletAddress } = req.body; // Get wallet address from request body
     
@@ -113,6 +113,7 @@ app.post('/api/userSignup', async (req, res) => {
             res.status(500).json({ message: e.message });
         }
     });
+
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
