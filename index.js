@@ -91,6 +91,20 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
+    app.post('/api/checkAddress', (req, res) => {
+        const { walletAddress } = req.body;
+    
+        // Check if walletAddress is provided
+        if (!walletAddress) {
+            return res.status(400).json({ message: 'Wallet address is required.' });
+        }
+    
+        // Check if the wallet address already exists
+        const isUnique = !users.includes(walletAddress);
+        
+        res.status(200).json({ isUnique });
+    });
+    
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
