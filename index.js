@@ -191,9 +191,44 @@ app.post('/api/userSignup', async (req, res) => {
     
     
 // Login 
+// app.post('/api/userLogin', async (req, res) => {
+//     try {
+//         const { email, password, walletAddress } = req.body; // Add walletAddress
+
+//         // Check if user exists
+//         const user = await User.findOne({ email });
+//         if (!user) {
+//             return res.status(400).json({ message: "Invalid credentials" });
+//         }
+
+//         // Compare provided password with stored hashed password
+//         const isMatch = await bcrypt.compare(password, user.password);
+//         if (!isMatch) {
+//             return res.status(400).json({ message: "Invalid credentials" });
+//         }
+
+//         // Update the user's wallet address if it's provided
+//         if (walletAddress) {
+//             user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
+//             await user.save(); // Save the updated user document
+//         }
+
+//         // Generate JWT token
+//         const token = jwt.sign(
+//             { userId: user._id, email: user.email, profession: user.profession }, 
+//             'your_secret_key', 
+//         );
+
+//         res.status(200).json({ 
+//            token, _id: user._id}); // Include user ID in the response 
+//    } catch (e) {
+//        res.status(500).json({ message: e.message });
+//    }
+//});
+
 app.post('/api/userLogin', async (req, res) => {
     try {
-        const { email, password, walletAddress } = req.body; // Add walletAddress
+        const { email, password, walletAddress } = req.body;
 
         // Check if user exists
         const user = await User.findOne({ email });
@@ -209,22 +244,49 @@ app.post('/api/userLogin', async (req, res) => {
 
         // Update the user's wallet address if it's provided
         if (walletAddress) {
-            user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
-            await user.save(); // Save the updated user document
+            user.walletAddress = walletAddress;
+            await user.save();
         }
+
+        // Fetch transactions from Etherscan
+        const transactionData = await fetchEtherscanTransactions(user.walletAddress); // This should call the API to fetch transactions
+
+        // Format the transactions
+        const transactions = transactionData.map(tx => ({
+            from: tx.from,
+            to: tx.to,
+            amount: (BigInt(tx.value) / BigInt(10).pow(18)).toString()
+        }));
 
         // Generate JWT token
         const token = jwt.sign(
-            { userId: user._id, email: user.email, profession: user.profession }, // Payload / Include profession in the token
-            'your_secret_key', // Secret key (use a strong secret for production)
+            { userId: user._id, email: user.email, profession: user.profession }, 
+            'your_secret_key'
         );
 
+        // Send the token, _id, name, and transactions in the response
         res.status(200).json({ 
-            token, _id: user._id}); // Include user ID in the response 
+            token, 
+            _id: user._id, 
+            name: user.name, 
+            transactions 
+        });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+
+// Helper function to fetch transactions from Etherscan
+async function fetchEtherscanTransactions(walletAddress) {
+    const url = `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&sort=desc&apikey=YOUR_API_KEY`;
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.status === '1') {
+        return data.result;
+    } else {
+        throw new Error('Failed to fetch transactions');
+    }
+}
 
 
 // Get User Profile
@@ -245,8 +307,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
             contact: user.contact,
             profession: user.profession,
             profilePicture: user.profilePicture,
-            // walletAddress: user.walletAddress // Include if applicable
-            walletAddress: user.walletAddress // Include if applicable
+            walletAddress: user.walletAddress 
         });
     } catch (e) {
         res.status(500).json({ message: e.message });
