@@ -161,33 +161,56 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
-    // app.put('/api/users', verifyToken, async (req, res) => {
-    //     const { walletAddress } = req.body; // Get wallet address from request body
+    app.post('/api/adminLogin', async (req, res) => {
+        const { email, password } = req.body;
+    
+        try {
+            const user = await User.findOne({ email });
+            if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+    
+            const isMatch = await bcrypt.compare(password, user.password);
+            if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+    
+            // Check if user is admin
+            if (user.isAdmin !== 1) {
+                return res.status(403).json({ message: "You're not an admin" });
+            }
+    
+            // Generate JWT token
+            const token = jwt.sign({ userId: user._id, email: user.email }, 'your_secret_key'); // Use a strong secret key in production
+            res.status(200).json({ token, userId: user._id });
+        } catch (err) {
+            res.status(500).json({ message: err.message });
+        }
+    });
+
+    app.put('/api/users', verifyToken, async (req, res) => {
+        const { walletAddress } = req.body; // Get wallet address from request body
         
-    //     try {
-    //         // Check if the wallet address already exists for another user
-    //         const existingUser = await User.findOne({ walletAddress });
-    //         if (existingUser) {
-    //             return res.status(400).json({ message: 'Wallet address already in use by another account.' });
-    //         }
+        try {
+            // Check if the wallet address already exists for another user
+            const existingUser = await User.findOne({ walletAddress });
+            if (existingUser) {
+                return res.status(400).json({ message: 'Wallet address already in use by another account.' });
+            }
     
-    //         // Update the user's wallet address
-    //         const user = await User.findByIdAndUpdate(
-    //             req.user.userId, // Use the ID from the token
-    //             { walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
-    //             { new: true, runValidators: true } // Return the updated document and validate
-    //         );
+            // Update the user's wallet address
+            const user = await User.findByIdAndUpdate(
+                req.user.userId, // Use the ID from the token
+                { walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
+                { new: true, runValidators: true } // Return the updated document and validate
+            );
     
-    //         // Check if user was found and updated
-    //         if (!user) {
-    //             return res.status(404).json({ message: 'User not found' });
-    //         }
+            // Check if user was found and updated
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
     
-    //         res.status(200).json(user); // Return the updated user
-    //     } catch (e) {
-    //         res.status(500).json({ message: e.message });
-    //     }
-    // });
+            res.status(200).json(user); // Return the updated user
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    });
 
     app.get('/api/user', verifyToken, async (req, res) => {
         try {
