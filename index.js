@@ -235,9 +235,10 @@ app.get('/api/user', verifyToken, async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
+        // Fetch transactions for the user's wallet address
         const transactions = await fetchTransactions(user.walletAddress);
 
-        // Return user profile information
+        // Return user profile information along with transactions
         res.status(200).json({
             userId: user._id,
             name: user.name,
@@ -246,7 +247,12 @@ app.get('/api/user', verifyToken, async (req, res) => {
             contact: user.contact,
             profession: user.profession,
             profilePicture: user.profilePicture,
-            walletAddress: user.walletAddress 
+            walletAddress: user.walletAddress,
+            transactions: transactions.map(tx => ({
+                From: tx.sender,
+                To: tx.recipient,
+                Amount: tx.amount
+            }))
         });
     } catch (e) {
         res.status(500).json({ message: e.message });
