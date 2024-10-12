@@ -8,7 +8,7 @@ const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); // Import the routes
-
+const axios = require('axios');
 const nodemailer = require('nodemailer');
 const app = express();
 app.use(express.json());
@@ -110,7 +110,7 @@ app.post('/api/userSignup', async (req, res) => {
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(409).json({ message: "User with this email already exists" });
+            return res.status(400).json({ message: "User with this email already exists" });
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -161,9 +161,36 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
+    // app.put('/api/users', verifyToken, async (req, res) => {
+    //     const { walletAddress } = req.body; // Get wallet address from request body
+        
+    //     try {
+    //         // Check if the wallet address already exists for another user
+    //         const existingUser = await User.findOne({ walletAddress });
+    //         if (existingUser) {
+    //             return res.status(400).json({ message: 'Wallet address already in use by another account.' });
+    //         }
+    
+    //         // Update the user's wallet address
+    //         const user = await User.findByIdAndUpdate(
+    //             req.user.userId, // Use the ID from the token
+    //             { walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
+    //             { new: true, runValidators: true } // Return the updated document and validate
+    //         );
+    
+    //         // Check if user was found and updated
+    //         if (!user) {
+    //             return res.status(404).json({ message: 'User not found' });
+    //         }
+    
+    //         res.status(200).json(user); // Return the updated user
+    //     } catch (e) {
+    //         res.status(500).json({ message: e.message });
+    //     }
+    // });
     app.put('/api/users', verifyToken, async (req, res) => {
         const { walletAddress } = req.body; // Get wallet address from request body
-        
+    
         try {
             // Check if the wallet address already exists for another user
             const existingUser = await User.findOne({ walletAddress });
@@ -183,7 +210,21 @@ app.post('/api/userSignup', async (req, res) => {
                 return res.status(404).json({ message: 'User not found' });
             }
     
-            res.status(200).json(user); // Return the updated user
+            // Fetch transactions for the new wallet address
+            const transactions = await fetchTransactions(walletAddress); // Assuming this fetches the transactions
+    
+            // Return the updated user along with fetched transactions
+            res.status(200).json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                walletAddress: user.walletAddress,
+                transactions: transactions.map(tx => ({
+                    From: tx.sender,
+                    To: tx.recipient,
+                    Amount: tx.amount
+                }))
+            });
         } catch (e) {
             res.status(500).json({ message: e.message });
         }
@@ -191,41 +232,6 @@ app.post('/api/userSignup', async (req, res) => {
     
     
 // Login 
-// app.post('/api/userLogin', async (req, res) => {
-//     try {
-//         const { email, password, walletAddress } = req.body; // Add walletAddress
-
-//         // Check if user exists
-//         const user = await User.findOne({ email });
-//         if (!user) {
-//             return res.status(400).json({ message: "Invalid credentials" });
-//         }
-
-//         // Compare provided password with stored hashed password
-//         const isMatch = await bcrypt.compare(password, user.password);
-//         if (!isMatch) {
-//             return res.status(400).json({ message: "Invalid credentials" });
-//         }
-
-//         // Update the user's wallet address if it's provided
-//         if (walletAddress) {
-//             user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
-//             await user.save(); // Save the updated user document
-//         }
-
-//         // Generate JWT token
-//         const token = jwt.sign(
-//             { userId: user._id, email: user.email, profession: user.profession }, 
-//             'your_secret_key', 
-//         );
-
-//         res.status(200).json({ 
-//            token, _id: user._id}); // Include user ID in the response 
-//    } catch (e) {
-//        res.status(500).json({ message: e.message });
-//    }
-//});
-
 app.post('/api/userLogin', async (req, res) => {
     try {
         const { email, password, walletAddress } = req.body; // Add walletAddress
@@ -248,47 +254,18 @@ app.post('/api/userLogin', async (req, res) => {
             await user.save(); // Save the updated user document
         }
 
-        // Fetch transactions for the user's wallet address
-        let transactions = [];
-        if (walletAddress) {
-            // Call your function to fetch transactions here
-            transactions = await fetchTransactions(walletAddress); // Assuming this is a function that fetches transactions
-        }
-
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email, profession: user.profession }, 
             'your_secret_key', 
         );
 
-        // Send the response including name, transactions, and other data
-        res.status(200).json({
-            token,
-            _id: user._id,
-            name: user.name, // Include the user's name
-            transactions: transactions.map(tx => ({
-                From: tx.sender,
-                To: tx.recipient,
-                Amount: tx.amount
-            }))
-        });
+        res.status(200).json({ 
+            token, _id: user._id}); // Include user ID in the response 
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
-
-
-// Helper function to fetch transactions from Etherscan
-async function fetchEtherscanTransactions(walletAddress) {
-    const url = `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&sort=desc&apikey=YOUR_API_KEY`;
-    const response = await fetch(url);
-    const data = await response.json();
-    if (data.status === '1') {
-        return data.result;
-    } else {
-        throw new Error('Failed to fetch transactions');
-    }
-}
 
 
 // Get User Profile
