@@ -275,6 +275,13 @@ app.post('/api/userLogin', async (req, res) => {
             'your_secret_key', // Secret key (use a strong secret for production)
         );
 
+         // Send response based on isAdmin value
+         if (user.isAdmin === 1) {
+            res.status(200).json({ token, _id: user._id, role: "Admin" }); // Include Admin role in the response
+        } else {
+            res.status(200).json({ token, _id: user._id, role: "User" }); // Include User role in the response
+        }
+
         res.status(200).json({ 
             token, _id: user._id}); // Include user ID in the response 
     } catch (e) {
