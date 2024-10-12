@@ -9,6 +9,7 @@ const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); // Import the routes
 const nodemailer = require('nodemailer');
+const Transaction = require('./models/transaction.model');
 const app = express();
 app.use(express.json());
 app.use(jobRoutes); // Attach the job routes to your app
@@ -164,11 +165,6 @@ app.post('/api/userSignup', async (req, res) => {
         const { walletAddress } = req.body; // Get wallet address from request body
         
         try {
-            // Check if the wallet address already exists for another user
-            const existingUser = await User.findOne({ walletAddress });
-            if (existingUser) {
-                return res.status(400).json({ message: 'Wallet address already in use by another account.' });
-            }
     
             // Update the user's wallet address
             const user = await User.findByIdAndUpdate(
@@ -243,7 +239,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
             userId: user._id,
             name: user.name,
             email: user.email,
-            location: user.location,
+            location: user.location,    
             contact: user.contact,
             profession: user.profession,
             profilePicture: user.profilePicture,
@@ -260,7 +256,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
 });
 
     async function fetchTransactions(walletAddress) {
-        const etherscanApiKey = '5KEE4GXQSGWAFCJ6CWBJPMQ5BV3VQ33IX1'; // Replace with your Etherscan API key
+        const etherscanApiKey = '5KEE4GXQSGWAFCJ6CWBJPMQ5BV3VQ33IX1'; 
         const url = `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&sort=desc&apikey=${etherscanApiKey}`;
         
         try {
