@@ -161,33 +161,89 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
-    app.put('/api/users', verifyToken, async (req, res) => {
-        const { walletAddress } = req.body; // Get wallet address from request body
+    // app.put('/api/users', verifyToken, async (req, res) => {
+    //     const { walletAddress } = req.body; // Get wallet address from request body
         
+    //     try {
+    //         // Check if the wallet address already exists for another user
+    //         const existingUser = await User.findOne({ walletAddress });
+    //         if (existingUser) {
+    //             return res.status(400).json({ message: 'Wallet address already in use by another account.' });
+    //         }
+    
+    //         // Update the user's wallet address
+    //         const user = await User.findByIdAndUpdate(
+    //             req.user.userId, // Use the ID from the token
+    //             { walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
+    //             { new: true, runValidators: true } // Return the updated document and validate
+    //         );
+    
+    //         // Check if user was found and updated
+    //         if (!user) {
+    //             return res.status(404).json({ message: 'User not found' });
+    //         }
+    
+    //         res.status(200).json(user); // Return the updated user
+    //     } catch (e) {
+    //         res.status(500).json({ message: e.message });
+    //     }
+    // });
+
+    app.get('/api/user', verifyToken, async (req, res) => {
         try {
-            // Check if the wallet address already exists for another user
-            const existingUser = await User.findOne({ walletAddress });
-            if (existingUser) {
-                return res.status(400).json({ message: 'Wallet address already in use by another account.' });
-            }
-    
-            // Update the user's wallet address
-            const user = await User.findByIdAndUpdate(
-                req.user.userId, // Use the ID from the token
-                { walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
-                { new: true, runValidators: true } // Return the updated document and validate
-            );
-    
-            // Check if user was found and updated
+            // Fetch the user based on the ID decoded from the token
+            const user = await User.findById(req.user.userId);
             if (!user) {
-                return res.status(404).json({ message: 'User not found' });
+                return res.status(404).json({ message: "User not found" });
             }
     
-            res.status(200).json(user); // Return the updated user
+            // Fetch transactions for the user's wallet address
+            const transactions = await fetchTransactions(user.walletAddress);
+    
+            // Return user profile information along with transactions
+            res.status(200).json({
+                userId: user._id,
+                name: user.name,
+                email: user.email,
+                location: user.location,
+                contact: user.contact,
+                profession: user.profession,
+                profilePicture: user.profilePicture,
+                walletAddress: user.walletAddress,
+                transactions: transactions.map(tx => ({
+                    From: tx.sender,
+                    To: tx.recipient,
+                    Amount: tx.amount
+                }))
+            });
         } catch (e) {
             res.status(500).json({ message: e.message });
         }
     });
+
+    async function fetchTransactions(walletAddress) {
+        const etherscanApiKey = 'your_etherscan_api_key'; // Replace with your Etherscan API key
+        const url = `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&sort=desc&apikey=${etherscanApiKey}`;
+        
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+    
+            if (data.status === '1') {
+                return data.result.map(tx => ({
+                    sender: tx.from,
+                    recipient: tx.to,
+                    amount: (parseInt(tx.value) / Math.pow(10, 18)).toFixed(4) // Convert from Wei to ETH
+                }));
+            } else {
+                console.error('Etherscan API error:', data);
+                return [];
+            }
+        } catch (error) {
+            console.error('Error fetching transactions:', error);
+            return [];
+        }
+    }
     
     
 // Login 
