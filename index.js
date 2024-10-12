@@ -489,7 +489,7 @@ app.post('/api/forgotPassword', async (req, res) => {
     }
 });
 
-app.patch('/api/users/:id/verify', async (req, res) => {
+app.patch('/api/users/_id/verify', async (req, res) => {
     const userId = req.params.id;
     const { isVerify } = req.body;
   
@@ -510,7 +510,7 @@ app.patch('/api/users/:id/verify', async (req, res) => {
     }
   });
 
-  app.delete('/api/users/:id', async (req, res) => {
+  app.delete('/api/users/_id', async (req, res) => {
     const userId = req.params.id;
   
     try {
