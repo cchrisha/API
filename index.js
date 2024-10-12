@@ -122,7 +122,8 @@ app.post('/api/userSignup', async (req, res) => {
             location,
             contact,
             profession,
-            isAdmin: 0 
+            isAdmin: 0, 
+            isVerify: 0
         });
 
         res.status(201).json({

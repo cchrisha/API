@@ -48,6 +48,10 @@ const UserSchema = mongoose.Schema(
         isAdmin: {
             type: Number,
             default: 0, // Default is 0, indicating the user is not an admin
+        },
+        isVerify: {
+            type: Number,
+            default: 0, 
         }
     },
     {
