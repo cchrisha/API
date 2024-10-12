@@ -178,11 +178,18 @@ app.post('/api/userSignup', async (req, res) => {
     
             // Generate JWT token
             const token = jwt.sign({ userId: user._id, email: user.email }, 'your_secret_key'); // Use a strong secret key in production
-            res.status(200).json({ token, userId: user._id });
+    
+            // Send success response
+            res.status(200).json({
+                success: true, // Indicate the operation was successful
+                token: token,
+                userId: user._id,
+            });
         } catch (err) {
             res.status(500).json({ message: err.message });
         }
     });
+    
 
     app.put('/api/users', verifyToken, async (req, res) => {
         const { walletAddress } = req.body; // Get wallet address from request body
