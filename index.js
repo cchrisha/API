@@ -489,6 +489,43 @@ app.post('/api/forgotPassword', async (req, res) => {
     }
 });
 
+app.patch('/api/users/:id/verify', async (req, res) => {
+    const userId = req.params.id;
+    const { isVerify } = req.body;
+  
+    try {
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { isVerify },
+        { new: true } // Return the updated document
+      );
+  
+      if (!updatedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      res.json(updatedUser);
+    } catch (error) {
+      res.status(500).json({ message: 'Error updating user', error });
+    }
+  });
+
+  app.delete('/api/users/:id', async (req, res) => {
+    const userId = req.params.id;
+  
+    try {
+      const deletedUser = await User.findByIdAndDelete(userId);
+  
+      if (!deletedUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+  
+      res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ message: 'Error deleting user', error });
+    }
+  });
+
 // Verify OTP
 app.post('/api/verifyOtp', async (req, res) => {
     try {
