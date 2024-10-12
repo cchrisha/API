@@ -13,7 +13,6 @@ const app = express();
 app.use(express.json());
 app.use(jobRoutes); // Attach the job routes to your app
 app.use(cors());
-const axios = require('axios');
 
 // Configure Cloudinary with your credentials
 cloudinary.config({
