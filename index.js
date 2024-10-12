@@ -222,7 +222,7 @@ app.post('/api/userSignup', async (req, res) => {
     });
 
     async function fetchTransactions(walletAddress) {
-        const etherscanApiKey = 'your_etherscan_api_key'; // Replace with your Etherscan API key
+        const etherscanApiKey = '5KEE4GXQSGWAFCJ6CWBJPMQ5BV3VQ33IX1';
         const url = `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&sort=desc&apikey=${etherscanApiKey}`;
         
         try {
