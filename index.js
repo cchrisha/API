@@ -206,8 +206,6 @@ app.post('/api/userLogin', async (req, res) => {
         if (!isMatch) {
             return res.status(400).json({ message: "Invalid credentials" });
         }
-
-        // Update the user's wallet address if it's provided
         if (walletAddress) {
             user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
             await user.save(); // Save the updated user document
