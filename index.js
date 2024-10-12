@@ -13,7 +13,7 @@ const app = express();
 app.use(express.json());
 app.use(jobRoutes); // Attach the job routes to your app
 app.use(cors());
-
+const axios = require('axios');
 
 // Configure Cloudinary with your credentials
 cloudinary.config({
@@ -261,6 +261,26 @@ app.post('/api/userLogin', async (req, res) => {
     }
 });
 
+async function fetchTransactions(walletAddress) {
+    const etherscanApiKey = '5KEE4GXQSGWAFCJ6CWBJPMQ5BV3VQ33IX1'; // Replace with your Etherscan API key
+    const url = `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&sort=desc&apikey=${etherscanApiKey}`;
+    
+    try {
+        const response = await axios.get(url);
+        if (response.data.status === '1') {
+            return response.data.result.map(tx => ({
+                sender: tx.from,
+                recipient: tx.to,
+                amount: (parseInt(tx.value) / Math.pow(10, 18)).toFixed(4) // Convert from Wei to ETH
+            }));
+        } else {
+            return [];
+        }
+    } catch (error) {
+        console.error('Error fetching transactions:', error);
+        return [];
+    }
+}
 
 // Get User Profile
 app.get('/api/user', verifyToken, async (req, res) => {
