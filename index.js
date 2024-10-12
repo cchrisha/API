@@ -8,7 +8,6 @@ const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); // Import the routes
-const fetch = require('node-fetch');
 const nodemailer = require('nodemailer');
 const app = express();
 app.use(express.json());
@@ -228,31 +227,31 @@ app.post('/api/userLogin', async (req, res) => {
 
 
 // Get User Profile
-    app.get('/api/user', verifyToken, async (req, res) => {
-        try {
-            // Fetch the user based on the ID decoded from the token
-            const user = await User.findById(req.user.userId);
-            if (!user) {
-                return res.status(404).json({ message: "User not found" });
-            }
-
-            const transactions = await fetchTransactions(user.walletAddress);
-
-            // Return user profile information
-            res.status(200).json({
-                userId: user._id,
-                name: user.name,
-                email: user.email,
-                location: user.location,
-                contact: user.contact,
-                profession: user.profession,
-                profilePicture: user.profilePicture,
-                walletAddress: user.walletAddress 
-            });
-        } catch (e) {
-            res.status(500).json({ message: e.message });
+app.get('/api/user', verifyToken, async (req, res) => {
+    try {
+        // Fetch the user based on the ID decoded from the token
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
         }
-    });
+
+        const transactions = await fetchTransactions(user.walletAddress);
+
+        // Return user profile information
+        res.status(200).json({
+            userId: user._id,
+            name: user.name,
+            email: user.email,
+            location: user.location,
+            contact: user.contact,
+            profession: user.profession,
+            profilePicture: user.profilePicture,
+            walletAddress: user.walletAddress 
+        });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
 
     async function fetchTransactions(walletAddress) {
         const etherscanApiKey = '5KEE4GXQSGWAFCJ6CWBJPMQ5BV3VQ33IX1'; // Replace with your Etherscan API key
