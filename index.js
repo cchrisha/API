@@ -228,7 +228,7 @@ app.post('/api/userSignup', async (req, res) => {
 
 app.post('/api/userLogin', async (req, res) => {
     try {
-        const { email, password, walletAddress } = req.body;
+        const { email, password, walletAddress } = req.body; // Add walletAddress
 
         // Check if user exists
         const user = await User.findOne({ email });
@@ -244,37 +244,39 @@ app.post('/api/userLogin', async (req, res) => {
 
         // Update the user's wallet address if it's provided
         if (walletAddress) {
-            user.walletAddress = walletAddress;
-            await user.save();
+            user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
+            await user.save(); // Save the updated user document
         }
 
-        // Fetch transactions from Etherscan
-        const transactionData = await fetchEtherscanTransactions(user.walletAddress); // This should call the API to fetch transactions
-
-        // Format the transactions
-        const transactions = transactionData.map(tx => ({
-            from: tx.from,
-            to: tx.to,
-            amount: (BigInt(tx.value) / BigInt(10).pow(18)).toString()
-        }));
+        // Fetch transactions for the user's wallet address
+        let transactions = [];
+        if (walletAddress) {
+            // Call your function to fetch transactions here
+            transactions = await fetchTransactions(walletAddress); // Assuming this is a function that fetches transactions
+        }
 
         // Generate JWT token
         const token = jwt.sign(
             { userId: user._id, email: user.email, profession: user.profession }, 
-            'your_secret_key'
+            'your_secret_key', 
         );
 
-        // Send the token, _id, name, and transactions in the response
-        res.status(200).json({ 
-            token, 
-            _id: user._id, 
-            name: user.name, 
-            transactions 
+        // Send the response including name, transactions, and other data
+        res.status(200).json({
+            token,
+            _id: user._id,
+            name: user.name, // Include the user's name
+            transactions: transactions.map(tx => ({
+                From: tx.sender,
+                To: tx.recipient,
+                Amount: tx.amount
+            }))
         });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+
 
 // Helper function to fetch transactions from Etherscan
 async function fetchEtherscanTransactions(walletAddress) {
