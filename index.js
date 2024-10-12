@@ -510,7 +510,7 @@ app.patch('/api/users/{userId}/verify', async (req, res) => {
     }
   });
 
-  app.delete('/api/users/_id', async (req, res) => {
+  app.delete('/api/users/{userId}', async (req, res) => {
     const userId = req.params.id;
   
     try {
