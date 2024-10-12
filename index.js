@@ -489,7 +489,7 @@ app.post('/api/forgotPassword', async (req, res) => {
     }
 });
 
-app.patch('/api/users/{userId}/verify', async (req, res) => {
+app.patch('/api/users/verify/:id', async (req, res) => {
     const userId = req.params.id;
     const { isVerify } = req.body;
   
