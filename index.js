@@ -164,13 +164,7 @@ app.post('/api/userSignup', async (req, res) => {
     app.put('/api/users', verifyToken, async (req, res) => {
         const { walletAddress } = req.body; // Get wallet address from request body
     
-        try {
-            // Check if the wallet address already exists for another user
-            const existingUser = await User.findOne({ walletAddress });
-            if (existingUser) {
-                return res.status(400).json({ message: 'Wallet address already in use by another account.' });
-            }
-    
+        try {    
             // Update the user's wallet address
             const user = await User.findByIdAndUpdate(
                 req.user.userId, // Use the ID from the token
