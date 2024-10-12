@@ -35,15 +35,19 @@ const UserSchema = mongoose.Schema(
         },
         otp: {
             type: String,
-            default: null, // Default is null, meaning no OTP set
+            default: null, 
         },
         otpExpiry: {
             type: Date,
-            default: null, // Default is null, meaning no expiry set
+            default: null, 
         },
         profilePicture: {
             type: String,
-            default: null, // URL to the profile picture, default is null
+            default: null, 
+        },
+        isAdmin: {
+            type: Number,
+            default: 0, // Default is 0, indicating the user is not an admin
         }
     },
     {

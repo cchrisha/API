@@ -121,8 +121,8 @@ app.post('/api/userSignup', async (req, res) => {
             password: hashedPassword,
             location,
             contact,
-            // profilePicture 
-            profession
+            profession,
+            isAdmin: 0 
         });
 
         res.status(201).json({
