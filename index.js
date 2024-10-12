@@ -8,8 +8,8 @@ const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); // Import the routes
+
 const nodemailer = require('nodemailer');
-const Transaction = require('./models/transaction.model');
 const app = express();
 app.use(express.json());
 app.use(jobRoutes); // Attach the job routes to your app
@@ -236,53 +236,21 @@ app.get('/api/user', verifyToken, async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Fetch transactions for the user's wallet address
-        const transactions = await fetchTransactions(user.walletAddress);
-
-        // Return user profile information along with transactions
+        // Return user profile information
         res.status(200).json({
             userId: user._id,
             name: user.name,
             email: user.email,
-            location: user.location,    
+            location: user.location,
             contact: user.contact,
             profession: user.profession,
             profilePicture: user.profilePicture,
-            walletAddress: user.walletAddress,
-            transactions: transactions.map(tx => ({
-                From: tx.sender,
-                To: tx.recipient,
-                Amount: tx.amount
-            }))
+            walletAddress: user.walletAddress // Include if applicable
         });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
-
-    async function fetchTransactions(walletAddress) {
-        const etherscanApiKey = '5KEE4GXQSGWAFCJ6CWBJPMQ5BV3VQ33IX1'; 
-        const url = `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&sort=desc&apikey=${etherscanApiKey}`;
-        
-        try {
-            const response = await fetch(url);
-            const data = await response.json();
-
-            if (data.status === '1') {
-                return data.result.map(tx => ({
-                    sender: tx.from,
-                    recipient: tx.to,
-                    amount: (parseInt(tx.value) / Math.pow(10, 18)).toFixed(4) // Convert from Wei to ETH
-                }));
-            } else {
-                console.error('Etherscan API error:', data);
-                return [];
-            }
-        } catch (error) {
-            console.error('Error fetching transactions:', error);
-            return [];
-        }
-    }
 
 // User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
