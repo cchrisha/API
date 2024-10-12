@@ -184,6 +184,7 @@ app.post('/api/userSignup', async (req, res) => {
                 success: true, // Indicate the operation was successful
                 token: token,
                 userId: user._id,
+                isAdmin: user.isAdmin
             });
         } catch (err) {
             res.status(500).json({ message: err.message });
