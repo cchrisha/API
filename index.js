@@ -8,7 +8,7 @@ const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); // Import the routes
-
+const axios = require('axios');
 const nodemailer = require('nodemailer');
 const app = express();
 app.use(express.json());
@@ -163,12 +163,12 @@ app.post('/api/userSignup', async (req, res) => {
 
     app.put('/api/users', verifyToken, async (req, res) => {
         const { walletAddress } = req.body; // Get wallet address from request body
-        
+    
         try {
             // Check if the wallet address already exists for another user
             const existingUser = await User.findOne({ walletAddress });
             if (existingUser) {
-                return res.status(400).json({ message: ' Wallet address already in use by another account.' });
+                return res.status(400).json({ message: 'Wallet address already in use by another account.' });
             }
     
             // Update the user's wallet address
@@ -183,7 +183,21 @@ app.post('/api/userSignup', async (req, res) => {
                 return res.status(404).json({ message: 'User not found' });
             }
     
-            res.status(200).json(user); // Return the updated user
+            // Fetch transactions for the new wallet address
+            const transactions = await fetchTransactions(walletAddress); // Assuming this fetches the transactions
+    
+            // Return the updated user along with fetched transactions
+            res.status(200).json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                walletAddress: user.walletAddress,
+                transactions: transactions.map(tx => ({
+                    From: tx.sender,
+                    To: tx.recipient,
+                    Amount: tx.amount
+                }))
+            });
         } catch (e) {
             res.status(500).json({ message: e.message });
         }
