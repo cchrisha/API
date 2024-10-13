@@ -4,7 +4,7 @@ const router = express.Router();
 const verifyToken = require('../middleware/auth');
 const Job = require('../models/job.model.js');  // Make sure Job model is imported
 const mongoose = require('mongoose');
-
+const User = require('./models/user.model.js');
 // Post a Job
 // router.post('/api/jobs', verifyToken, async (req, res) => {
 //     try {
@@ -17,6 +17,27 @@ const mongoose = require('mongoose');
 //         res.status(500).json({ message: e.message });
 //     }
 // });
+const verifyToken = async (req, res, next) => {
+    const token = req.headers['authorization']?.split(' ')[1]; // Extract the token
+
+    if (!token) {
+        return res.status(403).json({ message: 'No token provided.' });
+    }
+
+    try {
+        const decoded = jwt.verify(token, 'your_jwt_secret'); // Replace with your secret
+        const user = await User.findById(decoded.id); // Find the user in the database
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        req.user = user; // Attach user to the request object
+        next(); // Proceed to the next middleware/route handler
+    } catch (error) {
+        return res.status(401).json({ message: 'Unauthorized!' });
+    }
+};
 
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
@@ -47,6 +68,7 @@ router.post('/api/jobs', verifyToken, async (req, res) => {
         });
     }
 });
+
 
 //Edit job
 router.put('/api/jobs/:jobId', verifyToken, async (req, res) => {
