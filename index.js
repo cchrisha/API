@@ -178,7 +178,7 @@ app.post('/api/userSignup', async (req, res) => {
             }
     
             // Generate JWT token
-            const token = jwt.sign({ userId: user._id, email: user.email }, 'your_secret_key'); // Use a strong secret key in production
+            const token = jwt.sign({ userId: user._id, email: user.email }, 'your_secret_key'); 
     
             // Send success response
             res.status(200).json({
@@ -457,7 +457,7 @@ app.put('/api/changePassword', verifyToken, async (req, res) => {
     //        res.status(500).json({ message: e.message });
     //    }
     // });
-    
+
     app.post('/api/adminLogout', verifyToken, async (req, res) => {
         try {
             const user = await User.findById(req.user.userId);
