@@ -149,18 +149,40 @@ app.post('/api/userSignup', async (req, res) => {
 });
 
     // Get All Users
+    // app.get('/api/users', async (req, res) => {
+    //     try {
+    //         // Fetch all users from the database
+    //         const users = await User.find({}); // Adjust the filter if needed
+
+    //         // Return the list of users
+    //         res.status(200).json(users);
+    //     } catch (e) {
+    //         // Handle any errors
+    //         res.status(500).json({ message: e.message });
+    //     }
+    // });
+
     app.get('/api/users', async (req, res) => {
         try {
             // Fetch all users from the database
             const users = await User.find({}); // Adjust the filter if needed
-
-            // Return the list of users
-            res.status(200).json(users);
+    
+            // Transform the user data to include verification status
+            const transformedUsers = users.map(user => ({
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                isVerified: user.isVerify === 1, // Convert to boolean for clarity
+            }));
+    
+            // Return the list of users with verification status
+            res.status(200).json(transformedUsers);
         } catch (e) {
             // Handle any errors
             res.status(500).json({ message: e.message });
         }
     });
+    
 
     app.post('/api/adminLogin', async (req, res) => {
         const { email, password } = req.body;
