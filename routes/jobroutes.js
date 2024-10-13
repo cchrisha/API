@@ -16,6 +16,7 @@ router.post('/api/jobs', verifyToken, async (req, res) => {
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
+    
 });
 
 //Edit job
