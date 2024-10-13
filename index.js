@@ -162,6 +162,35 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
+    app.get('/api/usersDetails', async (req, res) => {
+        try {
+            // Fetch all users from the database with specific fields
+            const users = await User.find({}, 'name email location contact profession isVerify');
+    
+            // If users are found, return success response
+            if (users.length > 0) {
+                res.status(200).json({
+                    status: 'success',
+                    message: 'Users fetched successfully',
+                    data: users
+                });
+            } else {
+                // If no users are found, return an empty success response
+                res.status(200).json({
+                    status: 'success',
+                    message: 'No users found',
+                    data: []
+                });
+            }
+        } catch (e) {
+            // Handle any errors and return failure response
+            res.status(500).json({
+                status: 'failed',
+                message: e.message,
+            });
+        }
+    });
+    
     app.get('/api/isUserVerify', async (req, res) => {
         try {
             const { verified } = req.query; // Get query parameter
