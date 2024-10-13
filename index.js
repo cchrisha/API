@@ -286,18 +286,27 @@ app.post('/api/userLogin', async (req, res) => {
         // Check if user exists
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(400).json({ message: "Invalid credentials" });
+            return res.status(400).json({ 
+                message: "Invalid credentials", 
+                success: false 
+            });
         }
 
         // Compare provided password with stored hashed password
         const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) {
-            return res.status(400).json({ message: "Invalid credentials" });
+            return res.status(400).json({ 
+                message: "Invalid credentials", 
+                success: false 
+            });
         }
 
         // Check if the user is an admin and reject login if true
         if (user.isAdmin === 1) {
-            return res.status(403).json({ message: "Admin accounts are not allowed to log in." });
+            return res.status(403).json({ 
+                message: "Admin accounts are not allowed to log in.", 
+                success: false 
+            });
         }
 
         // Update the user's wallet address if it's provided
@@ -313,15 +322,21 @@ app.post('/api/userLogin', async (req, res) => {
         );
 
         // Return success response for regular user
-        return res.status(200).json({ token, _id: user._id, role: "User" });
+        return res.status(200).json({ 
+            message: "Login successful", 
+            success: true, 
+            token, 
+            _id: user._id, 
+            role: "User" 
+        });
 
     } catch (e) {
-        res.status(500).json({ message: e.message });
+        res.status(500).json({ 
+            message: e.message, 
+            success: false 
+        });
     }
 });
-
-
-
 
 // Get User Profile
 app.get('/api/user', verifyToken, async (req, res) => {
