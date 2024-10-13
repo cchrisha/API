@@ -457,7 +457,7 @@ app.put('/api/changePassword', verifyToken, async (req, res) => {
     //        res.status(500).json({ message: e.message });
     //    }
     // });
-
+    
     app.post('/api/adminLogout', verifyToken, async (req, res) => {
         try {
             const user = await User.findById(req.user.userId);
