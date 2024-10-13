@@ -4,7 +4,6 @@ const router = express.Router();
 const verifyToken = require('../middleware/auth');
 const Job = require('../models/job.model.js');  // Make sure Job model is imported
 const mongoose = require('mongoose');
-const User = require('./models/user.model.js');
 // Post a Job
 // router.post('/api/jobs', verifyToken, async (req, res) => {
 //     try {
