@@ -6,17 +6,37 @@ const Job = require('../models/job.model.js');  // Make sure Job model is import
 const mongoose = require('mongoose');
 
 // Post a Job
+// router.post('/api/jobs', verifyToken, async (req, res) => {
+//     try {
+//         const { title, wageRange, isCrypto, location, professions, categories, description } = req.body;
+//         const job = await Job.create({
+//             title, wageRange, isCrypto, location, professions, categories,description, poster: req.user.userId
+//         });
+//         res.status(201).json(job);
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
+        // Check if the user is verified
+        if (req.user.isVerify === 0) {
+            return res.status(403).json({ message: 'User is not verified. You cannot post jobs.' });
+        }
+
         const { title, wageRange, isCrypto, location, professions, categories, description } = req.body;
+
         const job = await Job.create({
-            title, wageRange, isCrypto, location, professions, categories,description, poster: req.user.userId
+            title, wageRange, isCrypto, location, professions, categories, description, poster: req.user.userId
         });
+
         res.status(201).json(job);
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+
 
 //Edit job
 router.put('/api/jobs/:jobId', verifyToken, async (req, res) => {
