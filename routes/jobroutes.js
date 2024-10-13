@@ -47,7 +47,6 @@ router.post('/api/jobs', verifyToken, async (req, res) => {
     }
 });
 
-
 //Edit job
 router.put('/api/jobs/:jobId', verifyToken, async (req, res) => {
     try {
