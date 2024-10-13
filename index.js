@@ -354,7 +354,8 @@ app.post('/api/userLogin', async (req, res) => {
             success: true, 
             token, 
             _id: user._id, 
-            role: "User" 
+            role: "User",
+            isVerify: user.isVerify 
         });
 
     } catch (e) {
