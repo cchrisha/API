@@ -248,6 +248,8 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
+    
+
     app.get('/api/user', verifyToken, async (req, res) => {
         try {
             // Fetch the user based on the ID decoded from the token
@@ -435,7 +437,29 @@ app.patch('/api/users/verify/:id', async (req, res) => {
         res.status(500).json({ message: 'Error updating user', error });
     }
 });
+    app.put('/api/users/verify', verifyToken, async (req, res) => {
+        const { isVerify } = req.body; // Get the verification status from the request body
 
+        try {
+            // Use the user ID from the token (req.user.userId) to find the user
+            const user = await User.findById(req.user.userId); 
+            
+            // Check if user exists
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            // Update the isVerify field
+            user.isVerify = isVerify; // Update the field based on the request body
+
+            // Save the updated user
+            const updatedUser = await user.save();
+            return res.status(200).json(updatedUser);
+            
+        } catch (error) {
+            res.status(500).json({ message: 'Error updating user', error });
+        }
+    });
 
 
 // Change Password (inside the app)
