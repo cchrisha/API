@@ -162,7 +162,7 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
-    app.get('/api/isUserVeriy', async (req, res) => {
+    app.get('/api/isUserVerify', async (req, res) => {
         try {
             const { verified } = req.query; // Get query parameter
     
