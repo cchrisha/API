@@ -164,15 +164,20 @@ app.post('/api/userSignup', async (req, res) => {
 
     app.get('/api/users', async (req, res) => {
         try {
-            // Fetch all users from the database
-            const users = await User.find({}); // Adjust the filter if needed
+            const { verified } = req.query; // Get query parameter
     
-            // Transform the user data to include verification status
+            // Construct filter based on query parameter
+            const filter = verified === 'true' ? { isVerify: 1 } : {}; // Only get verified users if the query is set
+    
+            // Fetch users based on the filter
+            const users = await User.find(filter);
+    
+            // Transform the user data
             const transformedUsers = users.map(user => ({
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                isVerified: user.isVerify === 1, // Convert to boolean for clarity
+                isVerified: user.isVerify === 1,
             }));
     
             // Return the list of users with verification status
