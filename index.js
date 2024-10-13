@@ -162,24 +162,33 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
-    app.get('/api/usersDetails', async (req, res) => {
-        try {
-            // Fetch all users from the database with specific fields
-            const users = await User.find({}, 'name email location contact profession isVerify');
+    app.get('/api/users/:identifier', async (req, res) => {
+        const identifier = req.params.identifier;
     
-            // If users are found, return success response
-            if (users.length > 0) {
+        try {
+            let user;
+    
+            // Check if the identifier is a valid ObjectId (i.e., user ID)
+            if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
+                // Fetch user by ID
+                user = await User.findById(identifier, 'name email location contact profession isVerify');
+            } else {
+                // Fetch user by username
+                user = await User.findOne({ name: identifier }, 'name email location contact profession isVerify');
+            }
+    
+            if (user) {
+                // User found, return success response
                 res.status(200).json({
                     status: 'success',
-                    message: 'Users fetched successfully',
-                    data: users
+                    message: 'User fetched successfully',
+                    data: user
                 });
             } else {
-                // If no users are found, return an empty success response
-                res.status(200).json({
-                    status: 'success',
-                    message: 'No users found',
-                    data: []
+                // User not found
+                res.status(404).json({
+                    status: 'failed',
+                    message: 'User not found',
                 });
             }
         } catch (e) {
