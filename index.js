@@ -457,6 +457,27 @@ app.put('/api/changePassword', verifyToken, async (req, res) => {
     //        res.status(500).json({ message: e.message });
     //    }
     // });
+    
+    app.post('/api/adminLogout', verifyToken, async (req, res) => {
+        try {
+            const user = await User.findById(req.user.userId);
+            if (!user) {
+                return res.status(404).json({ message: "User not found" });
+            }
+    
+            // Optionally, you can check if the user is an admin before logging out
+            if (user.isAdmin !== 1) {
+                return res.status(403).json({ message: "Unauthorized: Admins only" });
+            }
+    
+            // Optionally, if you're managing sessions, you could invalidate the session here
+    
+            res.status(200).json({ message: "Logged out successfully" });
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    });
+    
 
 app.post('/api/logout', verifyToken, async (req, res) => {
     try {
