@@ -22,7 +22,10 @@ router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
         // Check if the user is verified
         if (req.user.isVerify === 0) {
-            return res.status(403).json({ message: 'User is not verified. You cannot post jobs.' });
+            return res.status(403).json({ 
+                success: false, 
+                message: 'User is not verified. You cannot post jobs.' 
+            });
         }
 
         const { title, wageRange, isCrypto, location, professions, categories, description } = req.body;
@@ -31,12 +34,19 @@ router.post('/api/jobs', verifyToken, async (req, res) => {
             title, wageRange, isCrypto, location, professions, categories, description, poster: req.user.userId
         });
 
-        res.status(201).json(job);
+        // Return success message with job details
+        res.status(201).json({ 
+            success: true, 
+            message: 'Job posted successfully!', 
+            job 
+        });
     } catch (e) {
-        res.status(500).json({ message: e.message });
+        res.status(500).json({ 
+            success: false, 
+            message: e.message 
+        });
     }
 });
-
 
 //Edit job
 router.put('/api/jobs/:jobId', verifyToken, async (req, res) => {
