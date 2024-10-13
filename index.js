@@ -162,6 +162,33 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
+    app.get('/api/isUserVeriy', async (req, res) => {
+        try {
+            const { verified } = req.query; // Get query parameter
+    
+            // Construct filter based on query parameter
+            const filter = verified === 'true' ? { isVerify: 1 } : {}; // Only get verified users if the query is set
+    
+            // Fetch users based on the filter
+            const users = await User.find(filter);
+    
+            // Transform the user data
+            const transformedUsers = users.map(user => ({
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                isVerified: user.isVerify === 1,
+            }));
+    
+            // Return the list of users with verification status
+            res.status(200).json(transformedUsers);
+        } catch (e) {
+            // Handle any errors
+            res.status(500).json({ message: e.message });
+        }
+    });
+    
+
     app.post('/api/adminLogin', async (req, res) => {
         const { email, password } = req.body;
     
