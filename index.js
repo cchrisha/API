@@ -162,6 +162,44 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
+    app.get('/api/users/:identifier', async (req, res) => {
+        const identifier = req.params.identifier;
+    
+        try {
+            let user;
+    
+            // Check if the identifier is a valid ObjectId (i.e., user ID)
+            if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
+                // Fetch user by ID
+                user = await User.findById(identifier, 'name email location contact profession isVerify');
+            } else {
+                // Fetch user by username
+                user = await User.findOne({ name: identifier }, 'name email location contact profession isVerify');
+            }
+    
+            if (user) {
+                // User found, return success response
+                res.status(200).json({
+                    status: 'success',
+                    message: 'User fetched successfully',
+                    data: user
+                });
+            } else {
+                // User not found
+                res.status(404).json({
+                    status: 'failed',
+                    message: 'User not found',
+                });
+            }
+        } catch (e) {
+            // Handle any errors and return failure response
+            res.status(500).json({
+                status: 'failed',
+                message: e.message,
+            });
+        }
+    });
+    
     app.get('/api/isUserVerify', async (req, res) => {
         try {
             const { verified } = req.query; // Get query parameter
@@ -247,6 +285,8 @@ app.post('/api/userSignup', async (req, res) => {
             res.status(500).json({ message: e.message });
         }
     });
+
+    
 
     app.get('/api/user', verifyToken, async (req, res) => {
         try {
@@ -354,7 +394,8 @@ app.post('/api/userLogin', async (req, res) => {
             success: true, 
             token, 
             _id: user._id, 
-            role: "User" 
+            role: "User",
+            isVerify: user.isVerify 
         });
 
     } catch (e) {
@@ -434,7 +475,29 @@ app.patch('/api/users/verify/:id', async (req, res) => {
         res.status(500).json({ message: 'Error updating user', error });
     }
 });
+    app.put('/api/users/verify', verifyToken, async (req, res) => {
+        const { isVerify } = req.body; // Get the verification status from the request body
 
+        try {
+            // Use the user ID from the token (req.user.userId) to find the user
+            const user = await User.findById(req.user.userId); 
+            
+            // Check if user exists
+            if (!user) {
+                return res.status(404).json({ message: 'User not found' });
+            }
+
+            // Update the isVerify field
+            user.isVerify = isVerify; // Update the field based on the request body
+
+            // Save the updated user
+            const updatedUser = await user.save();
+            return res.status(200).json(updatedUser);
+            
+        } catch (error) {
+            res.status(500).json({ message: 'Error updating user', error });
+        }
+    });
 
 
 // Change Password (inside the app)
