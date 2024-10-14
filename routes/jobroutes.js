@@ -63,19 +63,53 @@ router.delete('/api/jobs/:jobId', verifyToken, async (req, res) => {
 });
 
 
+// // Get Jobs Based on Profession
+// router.get('/api/jobs/profession', verifyToken, async (req, res) => {
+//     try {
+//         console.log(req.user); //print user profession
+
+//         const profession = req.user.profession ? req.user.profession.toLowerCase() : ''; //this first
+//         console.log('User Profession:', profession); // Debugging log
+
+//         //const jobs = await Job.find({ professions: req.user.profession })
+//         //const jobs = await Job.find({ professions: { $regex: profession, $options: 'i' } }) // Use regex for case-insensitive matching
+//         const jobs = await Job.find({ 
+//             professions: { $elemMatch: { $eq: profession } } // Exact match
+//         })
+//             .limit(10)
+//             .populate('poster', 'name');
+//         res.status(200).json(jobs);
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
+// // Get Most Recent Jobs (Posted in the Last Week)
+// router.get('/api/jobs/recent', async (req, res) => {
+//     try {
+//         const oneWeekAgo = new Date();
+//         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+//         const jobs = await Job.find({ datePosted: { $gte: oneWeekAgo } })
+//             .limit(10)
+//             .populate('poster', 'name');
+//         res.status(200).json(jobs);
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
 // Get Jobs Based on Profession
 router.get('/api/jobs/profession', verifyToken, async (req, res) => {
     try {
-        console.log(req.user); //print user profession
+        console.log(req.user); // Print user profession
 
-        const profession = req.user.profession ? req.user.profession.toLowerCase() : ''; //this first
+        const profession = req.user.profession ? req.user.profession.toLowerCase() : ''; // Ensure profession is in lowercase
         console.log('User Profession:', profession); // Debugging log
 
-        //const jobs = await Job.find({ professions: req.user.profession })
-        //const jobs = await Job.find({ professions: { $regex: profession, $options: 'i' } }) // Use regex for case-insensitive matching
         const jobs = await Job.find({ 
-            professions: { $elemMatch: { $eq: profession } } // Exact match
+            professions: { $elemMatch: { $eq: profession } } // Exact match on profession
         })
+            .sort({ datePosted: -1 }) // Sort from latest to oldest
             .limit(10)
             .populate('poster', 'name');
         res.status(200).json(jobs);
@@ -90,6 +124,7 @@ router.get('/api/jobs/recent', async (req, res) => {
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
         const jobs = await Job.find({ datePosted: { $gte: oneWeekAgo } })
+            .sort({ datePosted: -1 }) // Sort from latest to oldest
             .limit(10)
             .populate('poster', 'name');
         res.status(200).json(jobs);
@@ -97,6 +132,7 @@ router.get('/api/jobs/recent', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
 
 // Get All Jobs
 router.get('/api/alljobs', async (req, res) => {
