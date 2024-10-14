@@ -109,16 +109,40 @@ router.get('/api/alljobs', async (req, res) => {
 });
 
 // Post Job Request
+// router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
+//     try {
+//         const job = await Job.findById(req.params.jobId);
+//         if (!job) return res.status(404).json({ message: "Job not found" });
+
+//         const existingRequest = job.requests.find(req => req.user.toString() === req.user.userId);
+//         //const existingRequest = job.requests.find(request => request.user.toString() === req.user.userId);
+//         //req refers to the job request object inside the find function
+//         if (existingRequest) return res.status(400).json({ message: "You have already requested this job" });
+
+//         job.requests.push({ user: req.user.userId });
+//         await job.save();
+
+//         res.status(200).json({ message: "Job request submitted" });
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
 router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
     try {
         const job = await Job.findById(req.params.jobId);
         if (!job) return res.status(404).json({ message: "Job not found" });
 
+        // Check if the user is trying to apply to their own job
+        if (job.poster.toString() === req.user.userId) {
+            return res.status(400).json({ message: "You cannot apply to your own job post" });
+        }
+
+        // Check if the user has already requested this job
         const existingRequest = job.requests.find(req => req.user.toString() === req.user.userId);
-        //const existingRequest = job.requests.find(request => request.user.toString() === req.user.userId);
-        //req refers to the job request object inside the find function
         if (existingRequest) return res.status(400).json({ message: "You have already requested this job" });
 
+        // If not the poster, allow them to request the job
         job.requests.push({ user: req.user.userId });
         await job.save();
 
