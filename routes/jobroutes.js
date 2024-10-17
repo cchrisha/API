@@ -339,4 +339,23 @@ router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
     }
 });
 
+router.get('/api/jobs/export', async (req, res) => {
+    try {
+        const jobs = await Job.find().populate('poster', 'name');
+
+        // Prepare fields for the CSV
+        const fields = ['title', 'wageRange', 'isCrypto', 'location', 'professions', 'categories', 'description', 'poster.name'];
+        const json2csvParser = new Parser({ fields });
+        const csv = json2csvParser.parse(jobs);
+
+        // Set the content type and attachment header
+        res.header('Content-Type', 'text/csv');
+        res.attachment('jobs.csv');
+
+        return res.status(200).send(csv);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 module.exports = router;
