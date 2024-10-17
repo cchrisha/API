@@ -433,21 +433,30 @@ router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
 
 router.get('/api/jobs/export', async (req, res) => {
     try {
+        // Fetch jobs and populate poster field
         const jobs = await Job.find().populate('poster', 'name');
 
-        // Prepare fields for the CSV
+        // Check if jobs are retrieved successfully
+        if (!jobs || jobs.length === 0) {
+            return res.status(404).json({ message: 'No jobs found.' });
+        }
+
+        // Define the fields for the CSV
         const fields = ['title', 'wageRange', 'isCrypto', 'location', 'professions', 'categories', 'description', 'poster.name'];
         const json2csvParser = new Parser({ fields });
         const csv = json2csvParser.parse(jobs);
 
-        // Set the content type and attachment header
+        // Set CSV headers and attachment for download
         res.header('Content-Type', 'text/csv');
         res.attachment('jobs.csv');
 
+        // Send CSV content
         return res.status(200).send(csv);
     } catch (e) {
-        res.status(500).json({ message: e.message });
+        // Log error to the console and send error response
+        console.error('Error exporting jobs to CSV:', e);
+        return res.status(500).json({ message: 'Server error while generating CSV.', error: e.message });
     }
-});
+});   
 
 module.exports = router;
