@@ -164,6 +164,7 @@ router.get('/api/alljobs', async (req, res) => {
 //     }
 // });
 
+//Post job request
 router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
     try {
         const job = await Job.findById(req.params.jobId);
@@ -214,10 +215,23 @@ router.delete('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
     }
 });
 
-// Get Jobs Posted by User
+// // Get Jobs Posted by User
+// router.get('/api/user/:userId/jobs', async (req, res) => {
+//     try {
+//         const jobs = await Job.find({ poster: req.params.userId }).populate('poster', 'name');
+//         res.status(200).json(jobs);
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
+// Get Jobs Posted by User (Sorted by Latest)
 router.get('/api/user/:userId/jobs', async (req, res) => {
     try {
-        const jobs = await Job.find({ poster: req.params.userId }).populate('poster', 'name');
+        const jobs = await Job.find({ poster: req.params.userId })
+            .populate('poster', 'name')
+            .sort({ datePosted: -1 }); // Sort jobs by creation date, descending
+        
         res.status(200).json(jobs);
     } catch (e) {
         res.status(500).json({ message: e.message });
@@ -260,17 +274,43 @@ router.get('/api/jobs/:jobId/workers', async (req, res) => {
 
 
 
+// // Accept/Reject Job Request
+// router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => {
+//     try {
+//         const { action } = req.body; // 'accept' or 'reject'
+//         const job = await Job.findById(req.params.jobId);
+//         const request = job.requests.find(r => r.user.toString() === req.params.userId);
+//         if (!request) return res.status(404).json({ message: "Request not found" });
+
+//         if (action === 'accept') {
+//             job.workers.push({ user: request.user, status: 'working on' });
+//             request.status = 'working on';
+//         } else if (action === 'reject') {
+//             request.status = 'rejected';
+//         }
+//         await job.save();
+
+//         res.status(200).json(job);
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
 // Accept/Reject Job Request
 router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => {
     try {
         const { action } = req.body; // 'accept' or 'reject'
         const job = await Job.findById(req.params.jobId);
-        const request = job.requests.find(r => r.user.toString() === req.params.userId);
-        if (!request) return res.status(404).json({ message: "Request not found" });
+        const requestIndex = job.requests.findIndex(r => r.user.toString() === req.params.userId);
+
+        if (requestIndex === -1) return res.status(404).json({ message: "Request not found" });
+
+        const request = job.requests[requestIndex];
 
         if (action === 'accept') {
+            // Add user to workers and remove from requests
             job.workers.push({ user: request.user, status: 'working on' });
-            request.status = 'working on';
+            job.requests.splice(requestIndex, 1); // Remove the request from the array
         } else if (action === 'reject') {
             request.status = 'rejected';
         }
@@ -287,10 +327,17 @@ router.put('/api/jobs/:jobId/workers/:userId', verifyToken, async (req, res) => 
     try {
         const { action } = req.body; // 'done' or 'canceled'
         const job = await Job.findById(req.params.jobId);
-        const worker = job.workers.find(w => w.user.toString() === req.params.userId);
-        if (!worker) return res.status(404).json({ message: "Worker not found" });
+        const workerIndex = job.workers.findIndex(w => w.user.toString() === req.params.userId);
 
-        worker.status = action;
+        if (workerIndex === -1) return res.status(404).json({ message: "Worker not found" });
+
+        if (action === 'done' || action === 'canceled') {
+            // Remove worker from the workers array once action is 'done' or 'canceled'
+            job.workers.splice(workerIndex, 1);
+        } else {
+            job.workers[workerIndex].status = action;
+        }
+
         await job.save();
 
         res.status(200).json(job);
@@ -298,6 +345,23 @@ router.put('/api/jobs/:jobId/workers/:userId', verifyToken, async (req, res) => 
         res.status(500).json({ message: e.message });
     }
 });
+
+// // Update Worker Status (Mark as Done or Cancelled)
+// router.put('/api/jobs/:jobId/workers/:userId', verifyToken, async (req, res) => {
+//     try {
+//         const { action } = req.body; // 'done' or 'canceled'
+//         const job = await Job.findById(req.params.jobId);
+//         const worker = job.workers.find(w => w.user.toString() === req.params.userId);
+//         if (!worker) return res.status(404).json({ message: "Worker not found" });
+
+//         worker.status = action;
+//         await job.save();
+
+//         res.status(200).json(job);
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
 
 // Get Jobs Based on Status (Rejected, Requested, Working On, etc.)
 // router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
@@ -313,7 +377,33 @@ router.put('/api/jobs/:jobId/workers/:userId', verifyToken, async (req, res) => 
 //     }
 // });
 
-// Get Jobs Based on Status (Rejected, Requested, Working On, etc.)
+// // Get Jobs Based on Status (Rejected, Requested, Working On, etc.)
+// router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
+//     try {
+//         console.log('User ID:', req.user.userId);
+//         console.log('Status:', req.params.status);
+
+//         const jobs = await Job.find({
+//             requests: {
+//                 $elemMatch: {
+//                     user: new mongoose.Types.ObjectId(req.user.userId), // Use 'new' with ObjectId
+//                     status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive
+//                 }
+//             }
+//         }).populate('poster', 'name'); // Populate the poster field with the name
+
+//         if (!jobs || jobs.length === 0) {
+//             return res.status(200).json([]); // Return an empty array if no jobs are found
+//         }
+
+//         res.status(200).json(jobs);
+//     } catch (e) {
+//         console.error('Error fetching jobs:', e.message);
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
+// Get Jobs Based on Status (Sorted by Latest)
 router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
     try {
         console.log('User ID:', req.user.userId);
@@ -322,11 +412,13 @@ router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
         const jobs = await Job.find({
             requests: {
                 $elemMatch: {
-                    user: new mongoose.Types.ObjectId(req.user.userId), // Use 'new' with ObjectId
+                    user: new mongoose.Types.ObjectId(req.user.userId),
                     status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive
                 }
             }
-        }).populate('poster', 'name'); // Populate the poster field with the name
+        })
+        .populate('poster', 'name')
+        .sort({ datePosted: -1 }); // Sort jobs by creation date, descending
 
         if (!jobs || jobs.length === 0) {
             return res.status(200).json([]); // Return an empty array if no jobs are found
