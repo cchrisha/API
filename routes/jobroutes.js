@@ -134,6 +134,27 @@ router.get('/api/jobs/recent', async (req, res) => {
     }
 });
 
+router.get('/api/jobs/recentJob', verifyToken, async (req, res) => {
+    try {
+        // Check if the user is an admin
+        if (req.user.role !== 1) { // Assuming 1 is the role for admin users
+            return res.status(403).json({ message: "Access denied: Admins only" });
+        }
+
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        
+        // Fetch all jobs posted in the last week
+        const jobs = await Job.find({ datePosted: { $gte: oneWeekAgo } })
+            .sort({ datePosted: -1 }) // Sort from latest to oldest
+            .populate('poster', 'name'); // Populate poster's name
+        
+        res.status(200).json(jobs);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 
 // Get All Jobs
 router.get('/api/alljobs', async (req, res) => {
