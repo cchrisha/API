@@ -4,7 +4,7 @@ const router = express.Router();
 const verifyToken = require('../middleware/auth');
 const Job = require('../models/job.model.js');  // Make sure Job model is imported
 const mongoose = require('mongoose');
-const { Parser } = require('json2csv');
+const Json2csvParser = require("json2csv").Parser;
 
 // Post a Job
 router.post('/api/jobs', verifyToken, async (req, res) => {
