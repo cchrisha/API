@@ -5,6 +5,7 @@ const verifyToken = require('../middleware/auth');
 const Job = require('../models/job.model.js');  // Make sure Job model is imported
 const mongoose = require('mongoose');
 const { Parser } = require('json2csv');
+const User = require('../models/user.model.js');  // Adjust the path if necessary
 
 // Post a Job
 router.post('/api/jobs', verifyToken, async (req, res) => {
