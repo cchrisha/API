@@ -135,7 +135,7 @@ router.get('/api/jobs/recent', async (req, res) => {
 });
 
 
-router.get('/api/user/:userId/jobs/all', verifyToken, async (req, res) => {
+router.get('/api/user/:userId/jobs/all', async (req, res) => {
     try {
         const userId = req.params.userId;
         
