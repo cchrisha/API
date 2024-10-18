@@ -376,22 +376,67 @@ router.put('/api/jobs/:jobId/workers/:userId', verifyToken, async (req, res) => 
 //     }
 // });
 
+// // Get Jobs Based on Status (Sorted by Latest)
+// router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
+//     try {
+//         console.log('User ID:', req.user.userId);
+//         console.log('Status:', req.params.status);
+
+//         const jobs = await Job.find({
+//             workers: {
+//                 $elemMatch: {
+//                     user: req.user.userId,
+//                     status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive match
+//                 }
+//             }
+//         })
+//         .populate('poster', 'name')
+//         .sort({ datePosted: -1 }); // Sort jobs by creation date, descending
+
+//         if (!jobs || jobs.length === 0) {
+//             return res.status(200).json([]); // Return an empty array if no jobs are found
+//         }
+
+//         res.status(200).json(jobs);
+//     } catch (e) {
+//         console.error('Error fetching jobs:', e.message);
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
 // Get Jobs Based on Status (Sorted by Latest)
 router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
     try {
         console.log('User ID:', req.user.userId);
         console.log('Status:', req.params.status);
 
-        const jobs = await Job.find({
-            workers: {
-                $elemMatch: {
-                    user: req.user.userId,
-                    status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive match
+        let jobs = [];
+
+        // Check if status is 'requested', search the requests array
+        if (req.params.status.toLowerCase() === 'requested') {
+            jobs = await Job.find({
+                requests: {
+                    $elemMatch: {
+                        user: req.user.userId,
+                        status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive
+                    }
                 }
-            }
-        })
-        .populate('poster', 'name')
-        .sort({ datePosted: -1 }); // Sort jobs by creation date, descending
+            })
+            .populate('poster', 'name')
+            .sort({ datePosted: -1 });
+        } else {
+            // For 'working on', 'done', or other statuses, search in the workers array
+            jobs = await Job.find({
+                workers: {
+                    $elemMatch: {
+                        user: req.user.userId,
+                        status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive match
+                    }
+                }
+            })
+            .populate('poster', 'name')
+            .sort({ datePosted: -1 });
+        }
 
         if (!jobs || jobs.length === 0) {
             return res.status(200).json([]); // Return an empty array if no jobs are found
