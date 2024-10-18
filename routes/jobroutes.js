@@ -134,27 +134,37 @@ router.get('/api/jobs/recent', async (req, res) => {
     }
 });
 
-router.get('/api/jobs/recentJob', verifyToken, async (req, res) => {
+
+router.get('/api/user/:userId/jobs/all', verifyToken, async (req, res) => {
     try {
-        // Check if the user is an admin
-        if (req.user.role !== 1) { // Assuming 1 is the role for admin users
-            return res.status(403).json({ message: "Access denied: Admins only" });
+        const userId = req.params.userId;
+        
+        // Fetch all jobs for the user
+        const jobs = await Job.find({ poster: userId })
+            .populate('poster', 'name')
+            .sort({ datePosted: -1 });
+
+        if (!jobs || jobs.length === 0) {
+            return res.status(200).json({ current: [], completed: [], requested: [], rejected: [] });
         }
 
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        
-        // Fetch all jobs posted in the last week
-        const jobs = await Job.find({ datePosted: { $gte: oneWeekAgo } })
-            .sort({ datePosted: -1 }) // Sort from latest to oldest
-            .populate('poster', 'name'); // Populate poster's name
-        
-        res.status(200).json(jobs);
+        // Group jobs by status
+        const currentJobs = jobs.filter(job => job.workers.some(worker => worker.status === 'working on'));
+        const completedJobs = jobs.filter(job => job.workers.some(worker => worker.status === 'done'));
+        const requestedJobs = jobs.filter(job => job.requests.some(req => req.status === 'requested'));
+        const rejectedJobs = jobs.filter(job => job.requests.some(req => req.status === 'rejected'));
+
+        res.status(200).json({
+            current: currentJobs,
+            completed: completedJobs,
+            requested: requestedJobs,
+            rejected: rejectedJobs
+        });
     } catch (e) {
+        console.error(e.message);
         res.status(500).json({ message: e.message });
     }
 });
-
 
 // Get All Jobs
 router.get('/api/alljobs', async (req, res) => {
