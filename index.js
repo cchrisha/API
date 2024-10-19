@@ -7,12 +7,12 @@ const jwt = require('jsonwebtoken');
 const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
-const jobRoutes = require('./routes/jobroutes'); // Import the routes
+const jobRoutes = require('./routes/jobroutes'); 
 
 const nodemailer = require('nodemailer');
 const app = express();
 app.use(express.json());
-app.use(jobRoutes); // Attach the job routes to your app
+app.use(jobRoutes); 
 app.use(cors());
 
 
@@ -85,7 +85,7 @@ const transporter = nodemailer.createTransport({
 
 // Function to generate a random 6-digit OTP
 const generateOTP = () => {
-    return Math.floor(100000 + Math.random() * 900000).toString(); // Generates a random 6-digit number
+    return Math.floor(100000 + Math.random() * 900000).toString(); 
 };
 
 // Connect to MongoDB
@@ -534,19 +534,6 @@ app.put('/api/changePassword', verifyToken, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
-
-    // User Logout
-    //app.post('/api/logout', verifyToken, async (req, res) => {
-    //    try {
-    //        const user = await User.findById(req.user.userId);
-    //        if (!user) {
-    //           return res.status(404).json({ message: "User not found" });
-    //        }
-    //        res.status(200).json({ message: "Logged out successfully" });
-    //    } catch (e) {
-    //        res.status(500).json({ message: e.message });
-    //    }
-    // });
     
     app.post('/api/adminLogout', verifyToken, async (req, res) => {
         try {
