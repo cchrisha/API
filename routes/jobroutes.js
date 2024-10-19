@@ -347,34 +347,37 @@ router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
 
 router.get('/api/jobs/search', async (req, res) => {
     try {
-        const { query } = req.query;
+        const { query } = req.query;  // Get the dynamic query parameter from the request
 
-        // Define the search criteria
+        // If the query is "all", or no specific query is provided, return all jobs
+        if (!query || query.trim().toLowerCase() === 'all') {
+            const jobs = await Job.find().sort({ datePosted: -1 }).populate('poster', 'name');
+            return res.status(200).json(jobs);
+        }
+
+        // Define the search criteria dynamically to search all jobs based on any matching fields
         const searchCriteria = {
             $or: [
                 { title: { $regex: query, $options: 'i' } },  // Search by job title
                 { location: { $regex: query, $options: 'i' } },  // Search by location
                 { professions: { $regex: query, $options: 'i' } },  // Search by profession
-                { category: { $regex: query, $options: 'i' } }
+                { category: { $regex: query, $options: 'i' } }  // Search by category
             ]
         };
 
-        // Fetch jobs matching the search criteria
+        // Fetch jobs that match the dynamic search criteria
         const jobs = await Job.find(searchCriteria)
             .sort({ datePosted: -1 })  // Sort by latest jobs
-            .populate('poster', 'name');
+            .populate('poster', 'name');  // Populate poster details
 
-        // If no jobs found, return an empty array
-        if (!jobs || jobs.length === 0) {
-            return res.status(200).json([]);
-        }
-
-        // Return the matching jobs
-        res.status(200).json(jobs);
+        // Return the matching jobs or an empty array if none found
+        return res.status(200).json(jobs);
     } catch (e) {
-        res.status(500).json({ message: e.message });
+        // Return a server error if something goes wrong
+        return res.status(500).json({ message: e.message });
     }
 });
+
 
 router.get('/api/jobs/export', async (req, res) => {
     try {
