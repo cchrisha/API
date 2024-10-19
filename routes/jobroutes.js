@@ -354,7 +354,8 @@ router.get('/api/jobs/search', async (req, res) => {
             $or: [
                 { title: { $regex: query, $options: 'i' } },  // Search by job title
                 { location: { $regex: query, $options: 'i' } },  // Search by location
-                { professions: { $regex: query, $options: 'i' } }  // Search by profession
+                { professions: { $regex: query, $options: 'i' } },  // Search by profession
+                { category: { $regex: query, $options: 'i' } }
             ]
         };
 
@@ -363,10 +364,6 @@ router.get('/api/jobs/search', async (req, res) => {
             .sort({ datePosted: -1 })  // Sort by latest jobs
             .populate('poster', 'name');
 
-        // If no jobs found, return an empty array
-        if (!jobs || jobs.length === 0) {
-            return res.status(200).json([]);
-        }
 
         // Return the matching jobs
         res.status(200).json(jobs);
