@@ -349,20 +349,21 @@ router.get('/api/jobs/search', async (req, res) => {
     try {
         const { query } = req.query;
 
-        // Define the search criteria
+        // Define the search criteria for both jobs and poster (user)
         const searchCriteria = {
             $or: [
                 { title: { $regex: query, $options: 'i' } },  // Search by job title
                 { location: { $regex: query, $options: 'i' } },  // Search by location
                 { professions: { $regex: query, $options: 'i' } },  // Search by profession
-                { category: { $regex: query, $options: 'i' } }
+                { 'poster.name': { $regex: query, $options: 'i' } },  // Search by poster's name
+                { 'poster.email': { $regex: query, $options: 'i' } }  // Search by poster's email
             ]
         };
 
-        // Fetch jobs matching the search criteria
+        // Fetch jobs matching the search criteria and populate poster details
         const jobs = await Job.find(searchCriteria)
             .sort({ datePosted: -1 })  // Sort by latest jobs
-            .populate('poster', 'name');
+            .populate('poster', 'name email');  // Include name and email of the poster
 
         // If no jobs found, return an empty array
         if (!jobs || jobs.length === 0) {
@@ -375,6 +376,7 @@ router.get('/api/jobs/search', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
 
 router.get('/api/jobs/export', async (req, res) => {
     try {
