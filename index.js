@@ -697,3 +697,26 @@ app.post('/api/resetPassword', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
+app.post('/api/notifyPayment', async (req, res) => {
+    const { recipientAddress, amount, senderAddress } = req.body;
+
+    try {
+        // Find the user associated with the recipient address
+        const user = await User.findOne({ walletAddress: recipientAddress });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+
+        console.log(`Notification: ${senderAddress} sent ${amount} to ${recipientAddress}`);
+
+        // You might want to send an actual notification here (email, SMS, etc.)
+        
+        res.status(200).json({ message: 'Notification sent successfully.' });
+    } catch (error) {
+        console.error('Error notifying user:', error);
+        res.status(500).json({ message: 'Error notifying user.' });
+    }
+});
