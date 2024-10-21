@@ -75,24 +75,19 @@ app.get('/api/profilePicture', verifyToken, async (req, res) => {
 });
 
 // Fetch Other Profile Picture
-app.get('/api/users/:userId/profilePicture', verifyToken, async (req, res) => {
+app.get('/users/:userId/profilePicture', async (req, res) => {
     try {
-        const userId = req.params.userId; // Get userId from request parameters
-        const user = await User.findById(userId); // Find user by ID
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found.' });
-        }
-
-        res.status(200).json({
-            data: {
-                profilePictureUrl: user.profilePicture || null, // Adjust according to your database schema
-            },
-        });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
+      const userId = req.params.userId;
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      res.json({ profilePictureUrl: user.profilePictureUrl });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
     }
-});
+  });
+  
 
 // Configure nodemailer transporter
 const transporter = nodemailer.createTransport({
