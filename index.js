@@ -811,20 +811,31 @@ app.post('/api/transactions', async (req, res) => {
     }
 });
 
-app.post('/updateDeviceToken', async (req, res) => {
-    const { userId, deviceToken } = req.body;
+app.post('/api/notifyPayment', async (req, res) => {
+    const { senderId, receiverId, amount } = req.body;
   
     try {
-      await User.updateOne(
-        { userId: userId },
-        { $set: { deviceToken: deviceToken } },
-        { upsert: true }
-      );
-      res.status(200).json({ message: 'Device token updated successfully' });
+      // Fetch recipient's information from the database
+      const recipient = await User.findOne({ userId: receiverId });
+      if (!recipient) {
+        return res.status(404).json({ message: 'Recipient not found' });
+      }
+  
+      const recipientDeviceToken = recipient.deviceToken;
+      const recipientEmail = recipient.email; // Get the recipient's email
+  
+      // Here you would send the notification to the recipient
+      const notificationResponse = await sendNotification(recipientDeviceToken, amount, recipientEmail);
+      
+      if (notificationResponse) {
+        return res.status(200).json({ message: 'Notification sent successfully', transactionDetails: `You have received ${amount} ETH from ${senderId}` });
+      } else {
+        return res.status(500).json({ message: 'Failed to send notification' });
+      }
     } catch (error) {
-      res.status(500).json({ message: 'Error updating device token', error });
+      console.error('Error notifying payment:', error);
+      return res.status(500).json({ message: 'Internal Server Error', error });
     }
   });
-
 
 
