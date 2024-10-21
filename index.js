@@ -788,45 +788,28 @@ app.post('/api/resetPassword', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+app.post('/api/transactions', async (req, res) => {
+    const { senderId, receiverId, amount } = req.body;
 
-app.post('/api/notifyPayment', async (req, res) => {
-    const { recipientAddress, amount, senderAddress, userId } = req.body;
+    // Process the transaction (pseudo code)
+    const transactionResult = await processTransaction(senderId, receiverId, amount);
 
-    try {
-        // Find the user associated with the recipient address
-        const user = await User.findOne({ walletAddress: recipientAddress });
+    if (transactionResult.success) {
+        // Fetch receiver's email from the database
+        const receiver = await getUserById(receiverId);
+        const sender = await getUserById(senderId); // Fetch sender's details to get your email
+        const transactionDetails = `You received an amount of ${amount} from ${sender.email}.`;
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found.' });
-        }
-
-        // Generate a unique ID for the notification (you can customize this as needed)
-        const notificationId = new mongoose.Types.ObjectId(); // Using MongoDB ObjectId as an ID
-
-        // Log the notification details
-        console.log(`Notification: ${senderAddress} sent ${amount} to ${recipientAddress}`);
-
-        // Prepare the notification data
-        const notificationData = {
-            id: notificationId.toString(),
-            title: 'Transaction Successful',
-            body: `${senderAddress} sent you ${amount} ETH.`,
-            recipientAddress: recipientAddress,
-            amount: amount,
-            senderAddress: senderAddress,
-            userId: userId // Include the userId here
-        };
-
-        // Send the notification to the user (you might integrate with a notification service)
-        // For example, push notification logic goes here...
-
+        // Send response with transaction details
         res.status(200).json({
-            message: 'Notification sent successfully.',
-            notification: notificationData, // Return the notification data (optional)
+            message: 'Transaction successful.',
+            transactionDetails: transactionDetails,
+            receiverEmail: receiver.email // Include receiver email if needed
         });
-    } catch (error) {
-        console.error('Error notifying user:', error);
-        res.status(500).json({ message: 'Error notifying user.' });
+    } else {
+        res.status(400).json({ message: 'Transaction failed.' });
     }
 });
+
+
 
