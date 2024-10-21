@@ -788,24 +788,28 @@ app.post('/api/resetPassword', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+app.post('/api/transactions', async (req, res) => {
+    const { senderId, receiverId, amount } = req.body;
 
-router.post('/api/notifyPayment/:userId', verifyToken, async (req, res) => {
-    try {
-        const userId = req.params.userId; // Get userId from request parameters
-        const { amount, transactionId } = req.body; // Assuming you want to receive payment details in the body
+    // Process the transaction (pseudo code)
+    const transactionResult = await processTransaction(senderId, receiverId, amount);
 
-        // You can add logic here to handle the notification (e.g., sending an email, logging, etc.)
-        // For example, you could use a notification service or database to record the payment
+    if (transactionResult.success) {
+        // Fetch receiver's email from the database
+        const receiver = await getUserById(receiverId);
+        const sender = await getUserById(senderId); // Fetch sender's details to get your email
+        const transactionDetails = `You received an amount of ${amount} from ${sender.email}.`;
 
-        // Example response (you can adjust according to your needs)
+        // Send response with transaction details
         res.status(200).json({
-            message: 'Payment notification sent successfully.',
-            userId,
-            amount,
-            transactionId,
+            message: 'Transaction successful.',
+            transactionDetails: transactionDetails,
+            receiverEmail: receiver.email // Include receiver email if needed
         });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
+    } else {
+        res.status(400).json({ message: 'Transaction failed.' });
     }
 });
+
+
 
