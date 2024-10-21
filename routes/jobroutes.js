@@ -200,6 +200,29 @@ router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
     }
 });
 
+// Post a notification
+router.post('/api/notifications', verifyToken, async (req, res) => {
+    try {
+        const { user, message, job } = req.body;
+
+        // Validate the request body
+        if (!user || !message || !job) {
+            return res.status(400).json({ message: "Missing required fields." });
+        }
+
+        const notification = new Notification({
+            user, // The user ID of the notification recipient
+            message,
+            job, // The associated job ID
+        });
+        await notification.save(); // Save notification
+
+        res.status(201).json({ message: "Notification created successfully." });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 // Fetch notifications for the authenticated user
 router.get('/api/notifications', verifyToken, async (req, res) => {
     try {
