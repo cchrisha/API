@@ -141,32 +141,6 @@ router.get('/api/alljobs', async (req, res) => {
     }
 });
 
-
-// //Post job request
-// router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
-//     try {
-//         const job = await Job.findById(req.params.jobId);
-//         if (!job) return res.status(404).json({ message: "Job not found" });
-
-//         // Check if the user is trying to apply to their own job
-//         if (job.poster.toString() === req.user.userId) {
-//             return res.status(400).json({ message: "You cannot apply to your own job post" });
-//         }
-
-//         // Check if the user has already requested this job
-//         const existingRequest = job.requests.find(req => req.user.toString() === req.user.userId);
-//         if (existingRequest) return res.status(400).json({ message: "You have already requested this job" });
-
-//         // If not the poster, allow them to request the job
-//         job.requests.push({ user: req.user.userId });
-//         await job.save();
-
-//         res.status(200).json({ message: "Job request submitted" });
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
-
 // Post job request
 router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
     try {
@@ -195,29 +169,6 @@ router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
         await notification.save(); // Save notification
 
         res.status(200).json({ message: "Job request submitted" });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// Post a notification
-router.post('/api/notifications', verifyToken, async (req, res) => {
-    try {
-        const { user, message, job } = req.body;
-
-        // Validate the request body
-        if (!user || !message || !job) {
-            return res.status(400).json({ message: "Missing required fields." });
-        }
-
-        const notification = new Notification({
-            user, // The user ID of the notification recipient
-            message,
-            job, // The associated job ID
-        });
-        await notification.save(); // Save notification
-
-        res.status(201).json({ message: "Notification created successfully." });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
