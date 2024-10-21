@@ -701,7 +701,7 @@ app.post('/api/resetPassword', async (req, res) => {
 });
 
 app.post('/api/notifyPayment', async (req, res) => {
-    const { recipientAddress, amount, senderAddress } = req.body;
+    const { recipientAddress, amount, senderAddress, userId } = req.body;
 
     try {
         // Find the user associated with the recipient address
@@ -717,7 +717,7 @@ app.post('/api/notifyPayment', async (req, res) => {
         // Log the notification details
         console.log(`Notification: ${senderAddress} sent ${amount} to ${recipientAddress}`);
 
-        // Prepare the notification data (you can customize this as needed)
+        // Prepare the notification data
         const notificationData = {
             id: notificationId.toString(),
             title: 'Transaction Successful',
@@ -725,6 +725,7 @@ app.post('/api/notifyPayment', async (req, res) => {
             recipientAddress: recipientAddress,
             amount: amount,
             senderAddress: senderAddress,
+            userId: userId // Include the userId here
         };
 
         // Send the notification to the user (you might integrate with a notification service)
@@ -739,3 +740,4 @@ app.post('/api/notifyPayment', async (req, res) => {
         res.status(500).json({ message: 'Error notifying user.' });
     }
 });
+
