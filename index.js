@@ -288,7 +288,7 @@ app.post('/api/userSignup', async (req, res) => {
 
     
 
-    app.get('/api/user', verifyToken, async (req, res) => {
+    app.get('/api/userGetTransac', verifyToken, async (req, res) => {
         try {
             // Fetch the user based on the ID decoded from the token
             const user = await User.findById(req.user.userId);
@@ -314,6 +314,31 @@ app.post('/api/userSignup', async (req, res) => {
                     To: tx.recipient,
                     Amount: tx.amount
                 }))
+            });
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    });
+
+        // Get User Profile
+    app.get('/api/user', verifyToken, async (req, res) => {
+        try {
+            // Fetch the user based on the ID decoded from the token
+            const user = await User.findById(req.user.userId);
+            if (!user) {
+                return res.status(404).json({ message: "User not found" });
+            }
+
+            // Return user profile information
+            res.status(200).json({
+                userId: user._id,
+                name: user.name,
+                email: user.email,
+                location: user.location,
+                contact: user.contact,
+                profession: user.profession,
+                profilePicture: user.profilePicture,
+                walletAddress: user.walletAddress // Include if applicable
             });
         } catch (e) {
             res.status(500).json({ message: e.message });
@@ -406,30 +431,7 @@ app.post('/api/userLogin', async (req, res) => {
     }
 });
 
-// Get User Profile
-app.get('/api/user', verifyToken, async (req, res) => {
-    try {
-        // Fetch the user based on the ID decoded from the token
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
 
-        // Return user profile information
-        res.status(200).json({
-            userId: user._id,
-            name: user.name,
-            email: user.email,
-            location: user.location,
-            contact: user.contact,
-            profession: user.profession,
-            profilePicture: user.profilePicture,
-            walletAddress: user.walletAddress // Include if applicable
-        });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
 
 // User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
