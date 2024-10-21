@@ -810,6 +810,7 @@ app.post('/api/transactions', async (req, res) => {
         res.status(400).json({ message: 'Transaction failed.' });
     }
 });
+
 router.post('/api/notifyPayment/:userId', verifyToken, async (req, res) => {
     try {
         const userId = req.params.userId; // Get userId from request parameters
@@ -829,5 +830,4 @@ router.post('/api/notifyPayment/:userId', verifyToken, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
-  
 
