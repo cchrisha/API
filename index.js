@@ -698,6 +698,18 @@ app.post('/api/resetPassword', async (req, res) => {
     }
 });
 
+const express = require('express');
+const mongoose = require('mongoose');
+const app = express();
+
+app.use(express.json()); // Middleware to parse JSON body
+
+// Sample User model (make sure this reflects your actual User model)
+const User = mongoose.model('User', new mongoose.Schema({
+    walletAddress: String,
+    // other fields...
+}));
+
 app.post('/api/notifyPayment', async (req, res) => {
     const { recipientAddress, amount, senderAddress } = req.body;
 
@@ -709,12 +721,29 @@ app.post('/api/notifyPayment', async (req, res) => {
             return res.status(404).json({ message: 'User not found.' });
         }
 
+        // Generate a unique ID for the notification (you can customize this as needed)
+        const notificationId = new mongoose.Types.ObjectId(); // Using MongoDB ObjectId as an ID
 
+        // Log the notification details
         console.log(`Notification: ${senderAddress} sent ${amount} to ${recipientAddress}`);
 
-        // You might want to send an actual notification here (email, SMS, etc.)
-        
-        res.status(200).json({ message: 'Notification sent successfully.' });
+        // Prepare the notification data (you can customize this as needed)
+        const notificationData = {
+            id: notificationId.toString(),
+            title: 'Transaction Successful',
+            body: `${senderAddress} sent you ${amount} ETH.`,
+            recipientAddress: recipientAddress,
+            amount: amount,
+            senderAddress: senderAddress,
+        };
+
+        // Send the notification to the user (you might integrate with a notification service)
+        // For example, push notification logic goes here...
+
+        res.status(200).json({
+            message: 'Notification sent successfully.',
+            notification: notificationData, // Return the notification data (optional)
+        });
     } catch (error) {
         console.error('Error notifying user:', error);
         res.status(500).json({ message: 'Error notifying user.' });
