@@ -308,7 +308,7 @@ app.post('/api/userSignup', async (req, res) => {
 
     
 
-    app.get('/api/user', verifyToken, async (req, res) => {
+    app.get('/api/userGetTransac', verifyToken, async (req, res) => {
         try {
             // Fetch the user based on the ID decoded from the token
             const user = await User.findById(req.user.userId);
@@ -340,6 +340,31 @@ app.post('/api/userSignup', async (req, res) => {
         }
     });
 
+        // Get User Profile
+    app.get('/api/user', verifyToken, async (req, res) => {
+        try {
+            // Fetch the user based on the ID decoded from the token
+            const user = await User.findById(req.user.userId);
+            if (!user) {
+                return res.status(404).json({ message: "User not found" });
+            }
+
+            // Return user profile information
+            res.status(200).json({
+                userId: user._id,
+                name: user.name,
+                email: user.email,
+                location: user.location,
+                contact: user.contact,
+                profession: user.profession,
+                profilePicture: user.profilePicture,
+                walletAddress: user.walletAddress // Include if applicable
+            });
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    });
+
     async function fetchTransactions(walletAddress) {
         const etherscanApiKey = '5KEE4GXQSGWAFCJ6CWBJPMQ5BV3VQ33IX1';
         const url = `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&sort=desc&apikey=${etherscanApiKey}`;
@@ -364,7 +389,72 @@ app.post('/api/userSignup', async (req, res) => {
         }
     }
     
-    
+// // Login 
+// app.post('/api/userLogin', async (req, res) => {
+//     try {
+//         const { email, password, walletAddress } = req.body; // Add walletAddress
+
+//         // Check if user exists
+//         const user = await User.findOne({ email });
+//         if (!user) {
+//             return res.status(400).json({ 
+//                 message: "Invalid credentials", 
+//                 success: false 
+//             });
+//         }
+
+//         // Compare provided password with stored hashed password
+//         const isMatch = await bcrypt.compare(password, user.password);
+//         if (!isMatch) {
+//             return res.status(400).json({ 
+//                 message: "Invalid credentials", 
+//                 success: false 
+//             });
+//         }
+
+//         // Check if the user is an admin and reject login if true
+//         if (user.isAdmin === 1) {
+//             return res.status(403).json({ 
+//                 message: "Admin accounts are not allowed to log in.", 
+//                 success: false 
+//             });
+//         }
+
+//         // Update the user's wallet address if it's provided
+//         if (walletAddress) {
+//             user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
+//             await user.save(); // Save the updated user document
+//         }
+
+//         // Generate JWT token for regular user
+//         const token = jwt.sign(
+//             { 
+//                 userId: user._id, 
+//                 email: user.email, 
+//                 profession: user.profession,
+//                 name: user.name // Include name here
+//             }, 
+//             'your_secret_key'
+//         );  
+
+//         // Return success response for regular user
+//         return res.status(200).json({ 
+//             message: "Login successful", 
+//             success: true, 
+//             token, 
+//             _id: user._id, 
+//             role: "User",
+//             isVerify: user.isVerify 
+//         });
+
+//     } catch (e) {
+//         res.status(500).json({ 
+//             message: e.message, 
+//             success: false 
+//         });
+//     }
+// });
+
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
@@ -404,18 +494,24 @@ app.post('/api/userLogin', async (req, res) => {
 
         // Generate JWT token for regular user
         const token = jwt.sign(
-            { userId: user._id, email: user.email, profession: user.profession }, // Payload / Include profession in the token
-            'your_secret_key', // Secret key (use a strong secret for production)
-        );
+            { 
+                userId: user._id, 
+                email: user.email, 
+                profession: user.profession,
+                name: user.name // Include name here
+            }, 
+            'your_secret_key'
+        );  
 
-        // Return success response for regular user
+        // Return success response for regular user, including user name
         return res.status(200).json({ 
             message: "Login successful", 
             success: true, 
             token, 
             _id: user._id, 
             role: "User",
-            isVerify: user.isVerify 
+            isVerify: user.isVerify,
+            name: user.name // Include user name here
         });
 
     } catch (e) {
@@ -423,31 +519,6 @@ app.post('/api/userLogin', async (req, res) => {
             message: e.message, 
             success: false 
         });
-    }
-});
-
-// Get User Profile
-app.get('/api/user', verifyToken, async (req, res) => {
-    try {
-        // Fetch the user based on the ID decoded from the token
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Return user profile information
-        res.status(200).json({
-            userId: user._id,
-            name: user.name,
-            email: user.email,
-            location: user.location,
-            contact: user.contact,
-            profession: user.profession,
-            profilePicture: user.profilePicture,
-            walletAddress: user.walletAddress // Include if applicable
-        });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
     }
 });
 
