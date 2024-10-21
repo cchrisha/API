@@ -824,11 +824,17 @@ app.post('/api/notifyPayment', async (req, res) => {
       const recipientDeviceToken = recipient.deviceToken;
       const recipientEmail = recipient.email; // Get the recipient's email
   
-      // Here you would send the notification to the recipient
-      const notificationResponse = await sendNotification(recipientDeviceToken, amount, recipientEmail);
-      
+      // Create notification message
+      const notificationMessage = `You have received ${amount} ETH from ${senderId}`;
+  
+      // Send Awesome Notification to the recipient
+      const notificationResponse = await sendAwesomeNotification(recipientDeviceToken, notificationMessage, recipientEmail);
+  
       if (notificationResponse) {
-        return res.status(200).json({ message: 'Notification sent successfully', transactionDetails: `You have received ${amount} ETH from ${senderId}` });
+        return res.status(200).json({
+          message: 'Notification sent successfully',
+          transactionDetails: notificationMessage,
+        });
       } else {
         return res.status(500).json({ message: 'Failed to send notification' });
       }
@@ -837,5 +843,26 @@ app.post('/api/notifyPayment', async (req, res) => {
       return res.status(500).json({ message: 'Internal Server Error', error });
     }
   });
-
+  
+  // Function to send Awesome Notification
+  async function sendAwesomeNotification(deviceToken, message, recipientEmail) {
+    try {
+      await AwesomeNotifications().createNotification({
+        content: {
+          channelKey: 'transaction_channel', // Ensure this channel is created in your Flutter app
+          title: 'Transaction Received',
+          body: message,
+          payload: {
+            email: recipientEmail, // Add recipient email to payload if needed
+          },
+        },
+        // Additional settings can be configured here if needed
+      });
+      return true; // Notification sent successfully
+    } catch (error) {
+      console.error('Error sending Awesome Notification:', error);
+      return false; // Failed to send notification
+    }
+  }
+  
 
