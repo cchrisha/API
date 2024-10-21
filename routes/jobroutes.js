@@ -6,6 +6,7 @@ const Job = require('../models/job.model.js');  // Make sure Job model is import
 const mongoose = require('mongoose');
 const { Parser } = require('json2csv');
 const User = require('../models/user.model.js');  // Adjust the path if necessary
+const Notification = require('../models/notification.model'); // Import Notification model
 
 // Post a Job
 router.post('/api/jobs', verifyToken, async (req, res) => {
@@ -18,7 +19,6 @@ router.post('/api/jobs', verifyToken, async (req, res) => {
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
-    
 });
 
 //Edit job
@@ -142,26 +142,90 @@ router.get('/api/alljobs', async (req, res) => {
 });
 
 
-//Post job request
+// //Post job request
+// router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
+//     try {
+//         const job = await Job.findById(req.params.jobId);
+//         if (!job) return res.status(404).json({ message: "Job not found" });
+
+//         // Check if the user is trying to apply to their own job
+//         if (job.poster.toString() === req.user.userId) {
+//             return res.status(400).json({ message: "You cannot apply to your own job post" });
+//         }
+
+//         // Check if the user has already requested this job
+//         const existingRequest = job.requests.find(req => req.user.toString() === req.user.userId);
+//         if (existingRequest) return res.status(400).json({ message: "You have already requested this job" });
+
+//         // If not the poster, allow them to request the job
+//         job.requests.push({ user: req.user.userId });
+//         await job.save();
+
+//         res.status(200).json({ message: "Job request submitted" });
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
+// Post job request
 router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
     try {
         const job = await Job.findById(req.params.jobId);
         if (!job) return res.status(404).json({ message: "Job not found" });
 
-        // Check if the user is trying to apply to their own job
+        // Prevent user from applying to their own job
         if (job.poster.toString() === req.user.userId) {
             return res.status(400).json({ message: "You cannot apply to your own job post" });
         }
 
-        // Check if the user has already requested this job
+        // Check if user has already applied
         const existingRequest = job.requests.find(req => req.user.toString() === req.user.userId);
         if (existingRequest) return res.status(400).json({ message: "You have already requested this job" });
 
-        // If not the poster, allow them to request the job
+        // Add the user's request to the job
         job.requests.push({ user: req.user.userId });
         await job.save();
 
+        // Create a notification for the job poster
+        const notification = new Notification({
+            user: job.poster, // The job poster
+            message: `${req.user.name} has applied to your job post: ${job.title}`, // Custom message
+            job: job._id
+        });
+        await notification.save(); // Save notification
+
         res.status(200).json({ message: "Job request submitted" });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// Fetch notifications for the authenticated user
+router.get('/api/notifications', verifyToken, async (req, res) => {
+    try {
+        // Fetch all notifications for the logged-in user, sort by most recent
+        const notifications = await Notification.find({ user: req.user.userId })
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(notifications);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// Mark a notification as read (optional)
+router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
+    try {
+        const notification = await Notification.findById(req.params.notificationId);
+
+        if (!notification || notification.user.toString() !== req.user.userId) {
+            return res.status(404).json({ message: "Notification not found" });
+        }
+
+        notification.isRead = true;
+        await notification.save();
+
+        res.status(200).json({ message: "Notification marked as read" });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
