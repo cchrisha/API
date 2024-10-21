@@ -788,28 +788,6 @@ app.post('/api/resetPassword', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
-app.post('/api/transactions', async (req, res) => {
-    const { senderId, receiverId, amount } = req.body;
-
-    // Process the transaction (pseudo code)
-    const transactionResult = await processTransaction(senderId, receiverId, amount);
-
-    if (transactionResult.success) {
-        // Fetch receiver's email from the database
-        const receiver = await getUserById(receiverId);
-        const sender = await getUserById(senderId); // Fetch sender's details to get your email
-        const transactionDetails = `You received an amount of ${amount} from ${sender.email}.`;
-
-        // Send response with transaction details
-        res.status(200).json({
-            message: 'Transaction successful.',
-            transactionDetails: transactionDetails,
-            receiverEmail: receiver.email // Include receiver email if needed
-        });
-    } else {
-        res.status(400).json({ message: 'Transaction failed.' });
-    }
-});
 
 router.post('/api/notifyPayment/:userId', verifyToken, async (req, res) => {
     try {
