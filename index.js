@@ -810,39 +810,24 @@ app.post('/api/transactions', async (req, res) => {
         res.status(400).json({ message: 'Transaction failed.' });
     }
 });
-
-app.post('/api/notifyPayment', async (req, res) => {
-    const { senderId, receiverId, amount } = req.body;
-  
+router.post('/api/notifyPayment/:userId', verifyToken, async (req, res) => {
     try {
-      // Fetch recipient's information from the database
-      const recipient = await User.findOne({ userId: receiverId });
-      if (!recipient) {
-        return res.status(404).json({ message: 'Recipient not found' });
-      }
-  
-      const recipientDeviceToken = recipient.deviceToken;
-      const recipientEmail = recipient.email; // Get the recipient's email
-  
-      // Create notification message
-      const notificationMessage = `You have received ${amount} ETH from ${senderId}`;
-  
-      // Send Awesome Notification to the recipient
-      const notificationResponse = await sendAwesomeNotification(recipientDeviceToken, notificationMessage, recipientEmail);
-  
-      if (notificationResponse) {
-        return res.status(200).json({
-          message: 'Notification sent successfully',
-          transactionDetails: notificationMessage,
+        const userId = req.params.userId; // Get userId from request parameters
+        const { amount, transactionId } = req.body; // Assuming you want to receive payment details in the body
+
+        // You can add logic here to handle the notification (e.g., sending an email, logging, etc.)
+        // For example, you could use a notification service or database to record the payment
+
+        // Example response (you can adjust according to your needs)
+        res.status(200).json({
+            message: 'Payment notification sent successfully.',
+            userId,
+            amount,
+            transactionId,
         });
-      } else {
-        return res.status(500).json({ message: 'Failed to send notification' });
-      }
-    } catch (error) {
-      console.error('Error notifying payment:', error);
-      return res.status(500).json({ message: 'Internal Server Error', error });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
     }
-  });
-  
+});
   
 
