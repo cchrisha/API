@@ -811,5 +811,20 @@ app.post('/api/transactions', async (req, res) => {
     }
 });
 
+app.post('/updateDeviceToken', async (req, res) => {
+    const { userId, deviceToken } = req.body;
+  
+    try {
+      await User.updateOne(
+        { userId: userId },
+        { $set: { deviceToken: deviceToken } },
+        { upsert: true }
+      );
+      res.status(200).json({ message: 'Device token updated successfully' });
+    } catch (error) {
+      res.status(500).json({ message: 'Error updating device token', error });
+    }
+  });
+
 
 
