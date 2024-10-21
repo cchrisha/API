@@ -698,18 +698,6 @@ app.post('/api/resetPassword', async (req, res) => {
     }
 });
 
-const express = require('express');
-const mongoose = require('mongoose');
-const app = express();
-
-app.use(express.json()); // Middleware to parse JSON body
-
-// Sample User model (make sure this reflects your actual User model)
-const User = mongoose.model('User', new mongoose.Schema({
-    walletAddress: String,
-    // other fields...
-}));
-
 app.post('/api/notifyPayment', async (req, res) => {
     const { recipientAddress, amount, senderAddress } = req.body;
 
