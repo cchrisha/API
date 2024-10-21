@@ -409,9 +409,14 @@ app.post('/api/userLogin', async (req, res) => {
 
         // Generate JWT token for regular user
         const token = jwt.sign(
-            { userId: user._id, email: user.email, profession: user.profession }, // Payload / Include profession in the token
-            'your_secret_key', // Secret key (use a strong secret for production)
-        );
+            { 
+                userId: user._id, 
+                email: user.email, 
+                profession: user.profession,
+                name: user.name // Include name here
+            }, 
+            'your_secret_key'
+        );  
 
         // Return success response for regular user
         return res.status(200).json({ 
