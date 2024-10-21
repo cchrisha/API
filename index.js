@@ -844,25 +844,5 @@ app.post('/api/notifyPayment', async (req, res) => {
     }
   });
   
-  // Function to send Awesome Notification
-  async function sendAwesomeNotification(deviceToken, message, recipientEmail) {
-    try {
-      await AwesomeNotifications().createNotification({
-        content: {
-          channelKey: 'transaction_channel', // Ensure this channel is created in your Flutter app
-          title: 'Transaction Received',
-          body: message,
-          payload: {
-            email: recipientEmail, // Add recipient email to payload if needed
-          },
-        },
-        // Additional settings can be configured here if needed
-      });
-      return true; // Notification sent successfully
-    } catch (error) {
-      console.error('Error sending Awesome Notification:', error);
-      return false; // Failed to send notification
-    }
-  }
   
 
