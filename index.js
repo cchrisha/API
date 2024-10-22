@@ -13,8 +13,7 @@ const app = express();
 app.use(express.json());
 app.use(jobRoutes); 
 app.use(cors());
-
-
+const twilio = require('twilio');
 
 // Configure Cloudinary with your credentials
 cloudinary.config({
@@ -107,6 +106,44 @@ const transporter = nodemailer.createTransport({
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); 
 };
+
+app.post('/send-otp', (req, res) => {
+    const { contact } = req.body;
+    const otp = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit OTP
+  
+    // Here, you would save the OTP in your database associated with the contact
+    // For now, let's just log it for demonstration
+    console.log(`OTP for ${contact}: ${otp}`);
+  
+    // Check if the contact is an email or phone number
+    if (isEmail(contact)) {
+      // Send OTP to email
+      transporter.sendMail({
+        from: 'your-email@gmail.com',
+        to: contact,
+        subject: 'Your OTP Code',
+        text: `Your OTP code is: ${otp}`,
+      }, (error, info) => {
+        if (error) return res.status(500).send('Error sending email');
+        return res.status(200).send('OTP sent to email');
+      });
+    } else if (isPhoneNumber(contact)) {
+      // Send OTP via SMS (using Twilio or another service)
+      const client = twilio('ACCOUNT_SID', 'AUTH_TOKEN');
+      client.messages.create({
+        body: `Your OTP code is: ${otp}`,
+        from: 'YOUR_TWILIO_NUMBER',
+        to: contact,
+      })
+      .then(message => res.status(200).send('OTP sent to phone number'))
+      .catch(error => res.status(500).send('Error sending SMS'));
+    } else {
+      return res.status(400).send('Invalid contact');
+    }
+  });
+  
+  const isEmail = (input) => /^[^@]+@[^@]+\.[a-zA-Z]{2,}$/.test(input);
+  const isPhoneNumber = (input) => /^[0-9]+$/.test(input) && input.length >= 10;
 
 // Connect to MongoDB
 mongoose.connect("mongodb+srv://repatochrishamae:b2bZiRmYya0PmASm@authapi.2xnlj.mongodb.net/?retryWrites=true&w=majority&appName=authAPI")
