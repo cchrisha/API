@@ -210,7 +210,7 @@ router.get('/api/notifications', verifyToken, async (req, res) => {
     }
 });
 
-// Mark a notification as read (optional)
+// Mark a notification as read 
 router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
     try {
         const notification = await Notification.findById(req.params.notificationId);
