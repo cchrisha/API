@@ -8,12 +8,20 @@ const notificationSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now } // Timestamp
 });
 
+// const transactionNotificationSchema = new mongoose.Schema({
+//     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // The user receiving the notification
+//     message: { type: String, required: true }, // Notification message
+//     isRead: { type: Boolean, default: false }, // To track if the notification has been read
+//     createdAt: { type: Date, default: Date.now } // Timestamp
+// });
+
 const transactionNotificationSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // The user receiving the notification
+    walletAddress: { type: String, required: true }, // Wallet address receiving the notification
     message: { type: String, required: true }, // Notification message
     isRead: { type: Boolean, default: false }, // To track if the notification has been read
     createdAt: { type: Date, default: Date.now } // Timestamp
 });
+
 
 const TransactionNotification = mongoose.model('TransactionNotification', transactionNotificationSchema);
 const Notification = mongoose.model('Notification', notificationSchema);
