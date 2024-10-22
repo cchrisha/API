@@ -514,61 +514,14 @@ router.get('/users/wallet/:walletAddress', async (req, res) => {
     }
 });
 
-//MARVIN ITO
-router.post('/transaction-notifications', async (req, res) => {
-    const { walletAddress, message } = req.body; // Changed user to walletAddress
-
-    try {
-        const notification = new TransactionNotification({
-            walletAddress, // Use walletAddress instead of user
-            message,
-        });
-
-        await notification.save();
-        res.status(201).json(notification);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-router.get('/transaction-notifications/:walletAddress', async (req, res) => {
-    const { walletAddress } = req.params; // Changed userId to walletAddress
-
-    try {
-        const notifications = await TransactionNotification.find({ walletAddress }).sort({ createdAt: -1 });
-        res.status(200).json(notifications);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-router.patch('/transaction-notifications/:id/read', async (req, res) => {
-    const { id } = req.params;
-
-    try {
-        const notification = await TransactionNotification.findByIdAndUpdate(
-            id,
-            { isRead: true },
-            { new: true }
-        );
-
-        if (!notification) {
-            return res.status(404).json({ error: 'Notification not found' });
-        }
-
-        res.status(200).json(notification);
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
+// //MARVIN ITO
 // router.post('/transaction-notifications', async (req, res) => {
-//     const { user, message } = req.body; // Removed transactionHash from here
+//     const { walletAddress, message } = req.body; // Changed user to walletAddress
 
 //     try {
 //         const notification = new TransactionNotification({
-//             user,
+//             walletAddress, // Use walletAddress instead of user
 //             message,
-//             // No need to include transactionHash
 //         });
 
 //         await notification.save();
@@ -578,20 +531,17 @@ router.patch('/transaction-notifications/:id/read', async (req, res) => {
 //     }
 // });
 
-
-// // Get all transaction notifications for a user
-// router.get('/transaction-notifications/:userId', async (req, res) => {
-//     const { userId } = req.params;
+// router.get('/transaction-notifications/:walletAddress', async (req, res) => {
+//     const { walletAddress } = req.params; // Changed userId to walletAddress
 
 //     try {
-//         const notifications = await TransactionNotification.find({ user: userId }).sort({ createdAt: -1 });
+//         const notifications = await TransactionNotification.find({ walletAddress }).sort({ createdAt: -1 });
 //         res.status(200).json(notifications);
 //     } catch (error) {
 //         res.status(400).json({ error: error.message });
 //     }
 // });
 
-// // Mark a notification as read
 // router.patch('/transaction-notifications/:id/read', async (req, res) => {
 //     const { id } = req.params;
 
@@ -611,6 +561,58 @@ router.patch('/transaction-notifications/:id/read', async (req, res) => {
 //         res.status(400).json({ error: error.message });
 //     }
 // });
+
+//lana
+router.post('/transaction-notifications', async (req, res) => {
+    const { user, message } = req.body; // Removed transactionHash from here
+
+    try {
+        const notification = new TransactionNotification({
+            user,
+            message,
+            // No need to include transactionHash
+        });
+
+        await notification.save();
+        res.status(201).json(notification);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+
+// Get all transaction notifications for a user
+router.get('/transaction-notifications/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const notifications = await TransactionNotification.find({ user: userId }).sort({ createdAt: -1 });
+        res.status(200).json(notifications);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Mark a notification as read
+router.patch('/transaction-notifications/:id/read', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const notification = await TransactionNotification.findByIdAndUpdate(
+            id,
+            { isRead: true },
+            { new: true }
+        );
+
+        if (!notification) {
+            return res.status(404).json({ error: 'Notification not found' });
+        }
+
+        res.status(200).json(notification);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
 
 
 module.exports = router;
