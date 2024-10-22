@@ -828,15 +828,15 @@ app.post('/api/transactions', async (req, res) => {
 });
 
 
-// Get user by wallet address
-router.get('/user/:email', async (req, res) => {
-    try {
-        const notifications = await Notification.find({ recipientEmail: req.params.email }).sort({ createdAt: -1 });
-        res.json(notifications);
-    } catch (error) {
-        res.status(500).json({ message: 'Server error', error });
-    }
-});
+// // Get user by wallet address
+// router.get('/user/:email', async (req, res) => {
+//     try {
+//         const notifications = await Notification.find({ recipientEmail: req.params.email }).sort({ createdAt: -1 });
+//         res.json(notifications);
+//     } catch (error) {
+//         res.status(500).json({ message: 'Server error', error });
+//     }
+// });
 
 
 
