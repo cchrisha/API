@@ -9,7 +9,7 @@ const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); 
 const nodemailer = require('nodemailer');
-const appRoutes = require('./routes/app.routes');
+const appRoutes = require('./routes/routes.js');
 const app = express();
 app.use(express.json());
 app.use(jobRoutes); 
