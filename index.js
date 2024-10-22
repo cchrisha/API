@@ -813,13 +813,10 @@ app.post('/api/transactions', async (req, res) => {
 
 
 // Get user by wallet address
-app.get('/emailByWallet/:walletAddress', async (req, res) => {
+app.get('/user/:email', async (req, res) => {
     try {
-        const user = await User.findOne({ walletAddress: req.params.walletAddress });
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-        res.json({ email: user.email });
+        const notifications = await Notification.find({ recipientEmail: req.params.email }).sort({ createdAt: -1 });
+        res.json(notifications);
     } catch (error) {
         res.status(500).json({ message: 'Server error', error });
     }
