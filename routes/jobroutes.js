@@ -7,7 +7,7 @@ const mongoose = require('mongoose');
 const { Parser } = require('json2csv');
 const User = require('../models/user.model.js');  // Adjust the path if necessary
 const Notification = require('../models/notification.model'); // Import Notification model
-
+const TransactionNotification = require('../models/notification.model');
 // Post a Job
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
@@ -463,5 +463,57 @@ router.get('/api/jobs/export', async (req, res) => {
         return res.status(500).json({ message: 'Server error while generating CSV.', error: e.message });
     }
 });   
+
+//MARVIN ITO
+router.post('/transaction-notifications', async (req, res) => {
+    const { user, message, transactionHash } = req.body;
+
+    try {
+        const notification = new TransactionNotification({
+            user,
+            message,
+            transactionHash,
+        });
+
+        await notification.save();
+        res.status(201).json(notification);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Get all transaction notifications for a user
+router.get('/transaction-notifications/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const notifications = await TransactionNotification.find({ user: userId }).sort({ createdAt: -1 });
+        res.status(200).json(notifications);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Mark a notification as read
+router.patch('/transaction-notifications/:id/read', async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const notification = await TransactionNotification.findByIdAndUpdate(
+            id,
+            { isRead: true },
+            { new: true }
+        );
+
+        if (!notification) {
+            return res.status(404).json({ error: 'Notification not found' });
+        }
+
+        res.status(200).json(notification);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
 
 module.exports = router;
