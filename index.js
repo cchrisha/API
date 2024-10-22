@@ -341,7 +341,7 @@ app.post('/api/userSignup', async (req, res) => {
     });
 
         // Get User Profile
-    app.get('/api/user', verifyToken, async (req, res) => {
+    app.get('/api/user', verifyToken, async (req, res) => { 
         try {
             // Fetch the user based on the ID decoded from the token
             const user = await User.findById(req.user.userId);
