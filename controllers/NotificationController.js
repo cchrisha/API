@@ -13,7 +13,7 @@ async function createNotification(req, res) {
         // Check for required fields
         if (!userId || !message) {
             console.log('userId:', userId, 'message:', message); // Log the values for debugging
-            return res.status(400).json({ message: "Missing required fields tanga." });
+            return res.status(400).json({ message: "Missing required fields." });
         }
 
         // Validate that the user exists
@@ -30,6 +30,7 @@ async function createNotification(req, res) {
         res.status(500).json({ error: 'Failed to create notification' });
     }
 }
+
 
 
 // Controller method to get notifications for a specific user
