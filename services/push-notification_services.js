@@ -23,14 +23,14 @@ async function SendNotification(data, callback){
         });
     });
 
-        res.on("error", function(e) {
-           return callback({
-            message: e
-           });
+    res.on("error", function(e) {
+        return callback({
+        message: e
         });
-        
-        req.write(json.stringfy(data));
-        req.end();
+    });
+    
+    req.write(json.stringfy(data));
+    req.end();
 }
 
 module.exprots = {
