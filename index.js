@@ -844,7 +844,7 @@ app.post('/send-notification', async (req, res) => {
 
 
   // Verify Account
-app.post('/api/verifyAccount', async (req, res) => {
+app.post('/api/verifyAccount', verifyToken, async (req, res) => {
     try {
         const { email } = req.body;
 
@@ -896,7 +896,7 @@ app.post('/api/verifyAccount', async (req, res) => {
 });
 
 // Verify OTP for Account Verification
-app.post('/api/verifyAccountOtp', async (req, res) => {
+app.post('/api/verifyAccountOtp', verifyToken, async (req, res) => {
     try {
         const { email, otp } = req.body;
 
