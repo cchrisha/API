@@ -332,7 +332,8 @@ app.post('/api/userSignup', async (req, res) => {
                 transactions: transactions.map(tx => ({
                     From: tx.sender,
                     To: tx.recipient,
-                    Amount: tx.amount
+                    Amount: tx.amount,
+                    Hash: tx.hash
                 }))
             });
         } catch (e) {
