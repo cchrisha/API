@@ -3,15 +3,17 @@ const Notification = require('../models/notification/notif.model');
 const User = require('../models/user.model'); // Correct the import path for User model
 
 // Controller method to create a notification
+// Controller method to create a notification
 async function createNotification(req, res) {
     try {
-        console.log('Request Body:', req.body); // Log the incoming request body
+        console.log('Incoming Request Body:', req.body); // Log the request body
 
         const { userId, message } = req.body;
 
         // Check for required fields
         if (!userId || !message) {
-            return res.status(400).json({ message: "Missing required fields????." });
+            console.log('userId:', userId, 'message:', message); // Log the values for debugging
+            return res.status(400).json({ message: "Missing required fields tanga." });
         }
 
         // Validate that the user exists
@@ -28,6 +30,7 @@ async function createNotification(req, res) {
         res.status(500).json({ error: 'Failed to create notification' });
     }
 }
+
 
 // Controller method to get notifications for a specific user
 async function getUserNotifications(req, res) {
