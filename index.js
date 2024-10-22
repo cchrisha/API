@@ -1,31 +1,3 @@
-// const express = require('express');
-// const mongoose = require('mongoose');
-// const authRoutes = require('./routes/authRoutes');
-// const userRoutes = require('./routes/userRoutes');
-// const imageRoutes = require('./routes/imageRoutes');
-// const transactionRoutes = require('./routes/transactionRoutes');
-// const app = express();
-
-// app.use(express.json());
-
-// // Connect to MongoDB
-// mongoose.connect('your_mongo_db_connection_string', {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-// });
-
-// // Use routes
-// app.use('/api/auth', authRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/images', imageRoutes);
-// app.use('/api/transactions', transactionRoutes); // Add this line
-
-// // Start server
-// const PORT = process.env.PORT || 3001;
-// app.listen(PORT, () => {
-//     console.log(`Server is running on port ${PORT}`);
-// });
-
 
     const express = require('express');
     const cors = require('cors');
@@ -773,3 +745,31 @@
         }
     });
 
+
+    // const express = require('express');
+// const mongoose = require('mongoose');
+// const authRoutes = require('./routes/authRoutes');
+// const userRoutes = require('./routes/userRoutes');
+// const imageRoutes = require('./routes/imageRoutes');
+// const transactionRoutes = require('./routes/transactionRoutes');
+// const app = express();
+
+// app.use(express.json());
+
+// // Connect to MongoDB
+// mongoose.connect('mongodb+srv://repatochrishamae:b2bZiRmYya0PmASm@authapi.2xnlj.mongodb.net/?retryWrites=true&w=majority&appName=authAPI', {
+//     useNewUrlParser: true,
+//     useUnifiedTopology: true,
+// });
+
+// // Use routes
+// app.use('/api/auth', authRoutes);
+// app.use('/api/users', userRoutes);
+// app.use('/api/images', imageRoutes);
+// app.use('/api/transactions', transactionRoutes); // Add this line
+
+// // Start server
+// const PORT = process.env.PORT || 3001;
+// app.listen(PORT, () => {
+//     console.log(`Server is running on port ${PORT}`)z;
+// });
