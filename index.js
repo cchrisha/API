@@ -11,13 +11,14 @@ const appRoutes = require('./routes/approutes');
 const jobRoutes = require('./routes/jobroutes'); 
 const nodemailer = require('nodemailer');
 const app = express();
+const notificationRoutes = require('./routes/notificationRoutes');
 
 app.use(express.json());
 app.use(cors());
 
 app.use(jobRoutes); 
 app.use('/api', appRoutes);
-
+app.use('/api', notificationRoutes)
 // Configure Cloudinary with your credentials
 cloudinary.config({
     cloud_name: 'dx5reijcv',
