@@ -157,19 +157,22 @@
                 // profilePicture: user.profilePicture,
                 walletAddress: user.walletAddress // Include if applicable
             });
-            
-            // Find the specific admin responsible for verification
-            const responsibleAdmin = await User.findOne({ isAdmin: 1}); // Assuming isVerify indicates the admin is active
 
-            // Create a notification for the responsible admin
-            if (responsibleAdmin) {
-                const notification = new VerificationNotification({
-                    user: responsibleAdmin._id, // The specific admin user
-                    message: `${user.name} has requested a verification.`, // Custom message
-                });
-                await notification.save(); // Save the notification
+            // // Assuming the admin responsible for verification is also a user with isAdmin = true
+            const adminUser = await User.findOne({ isAdmin: 1 }); // Find the admin (or default admin)
+
+            if (!adminUser) {
+                return res.status(400).json({ message: "Admin for verification not found." });
             }
-            
+
+             // // Create a verification notification for the admin user
+            const notification = new VerificationNotification({
+                user: adminUser._id, // Reference the admin (who is also a user)
+                message: `${user.name} has requested account verification.`, // Custom message
+                notificationType: 'verify' // Mark this as a verification notification
+            });
+            await notification.save(); 
+
             // Create JWT token with profession
             const token = jwt.sign(
                 { userId: user._id, email: user.email, profession: user.profession }, // Include profession in the token
@@ -180,6 +183,81 @@
             res.status(500).json({ message: e.message });
         }
     });
+
+    // // Notification
+    // Fetch all verification notifications for admin
+        app.get('/api/notifications/admin', verifyToken, async (req, res) => {
+            try {
+                // Ensure the user is an admin
+                const user = await User.findById(req.user.userId);
+                if (!user || user.isAdmin !== 1) {
+                    return res.status(403).json({ message: "Access denied. Admins only." });
+                }
+                const notifications = await VerificationNotification.find({ notificationType: 'verify' })
+                    .sort({ createdAt: -1 });
+                
+                res.status(200).json(notifications);
+            } catch (e) {
+                res.status(500).json({ message: e.message });
+            }
+        });
+
+        //  Request user verification
+        app.post('/api/notifications/request-verification', verifyToken, async (req, res) => {
+            try {
+                const user = await User.findById(req.user.userId);
+                if (!user) {
+                    return res.status(404).json({ message: "User not found." });
+                }
+                const notification = new VerificationNotification({
+                                user: user._id,
+                                notificationType: 'verify',
+                                message: `${user.name} has requested verification.`,
+                                isRead: false,
+                                createdAt: new Date(),
+                            });
+                res.status(201).json({ message: "Verification request sent successfully." });
+                } catch (e) {
+                res.status(500).json({ message: e.message });
+            }
+        });
+
+        // Mark a user verification notification as approved or denied
+app.put('/api/notifications/verify/:notificationId', verifyToken, async (req, res) => {
+    try {
+        // Ensure the user is an admin
+        const user = await User.findById(req.user.userId);
+        if (!user || user.isAdmin !== 1) {
+            return res.status(403).json({ message: "Access denied. Admins only." });
+        }
+        const notification = await VerificationNotification.findById(req.params.notificationId);
+                if (!notification) {
+            return res.status(404).json({ message: "Notification not found" });
+        }
+                // Here we assume that 'action' is a field in the request body indicating approval or denial
+        const { action } = req.body; // 'approve' or 'deny'
+        if (!action || (action !== 'approve' && action !== 'deny')) {
+            return res.status(400).json({ message: "Invalid action. Use 'approve' or 'deny'." });
+        }
+        // Update the user's verification status based on the action
+        const userToVerify = await User.findById(notification.user);
+        if (!userToVerify) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        if (action === 'approve') {
+            userToVerify.isVerify = 1; // Mark user as verified
+        } else {
+            userToVerify.isVerify = 0; // Mark user as unverified
+        }
+        await userToVerify.save(); // Save the user's updated verification status
+        // Optionally, mark the notification as read or delete it
+        notification.isRead = true; // Mark as read
+        await notification.save(); // Save the notification state
+        res.status(200).json({ message: `User has been ${action === 'approve' ? 'verified' : 'denied'}.` });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
 
         // Get All Users
         app.get('/api/users', async (req, res) => {
