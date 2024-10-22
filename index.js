@@ -9,11 +9,12 @@ const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); 
 const nodemailer = require('nodemailer');
+const appRoutes = require('./routes/approutes');
 const app = express();
 app.use(express.json());
 app.use(jobRoutes); 
 app.use(cors());
-
+app.use(appRoutes);
 
 // Configure Cloudinary with your credentials
 cloudinary.config({
