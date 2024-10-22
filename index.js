@@ -158,24 +158,6 @@
                 walletAddress: user.walletAddress // Include if applicable
             });
 
-            // // Assuming the admin responsible for verification is also a user with isAdmin = true
-            const adminUser = await User.findOne({ isAdmin: 1 }); // Find the admin (or default admin)
-
-            if (!adminUser) {
-                return res.status(400).json({ message: "Admin for verification not found." });
-            }
-
-             // // Create a verification notification for the admin user
-             const notification = new VerificationNotification({
-                user: user._id,
-                notificationType: 'verify',
-                message: `${user.name} has requested verification.`,
-                isRead: false,
-                createdAt: new Date(),
-            });
-            await notification.save();
-            
-
             // Create JWT token with profession
             const token = jwt.sign(
                 { userId: user._id, email: user.email, profession: user.profession }, // Include profession in the token
@@ -519,6 +501,23 @@ app.put('/api/notifications/verify/:notificationId', verifyToken, async (req, re
                 user.walletAddress = walletAddress; // Ensure you have a walletAddress field in your User model
                 await user.save(); // Save the updated user document
             }
+
+            // // Assuming the admin responsible for verification is also a user with isAdmin = true
+            const adminUser = await User.findOne({ isAdmin: 1 }); // Find the admin (or default admin)
+
+            if (!adminUser) {
+                return res.status(400).json({ message: "Admin for verification not found." });
+            }
+
+             // // Create a verification notification for the admin user
+             const notification = new VerificationNotification({
+                user: user._id,
+                notificationType: 'verify',
+                message: `${user.name} has requested verification.`,
+                isRead: false,
+                createdAt: new Date(),
+            });
+            await notification.save();
 
             // Generate JWT token for regular user
             const token = jwt.sign(
