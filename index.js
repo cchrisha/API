@@ -13,8 +13,8 @@ const nodemailer = require('nodemailer');
 const app = express();
 app.use(express.json());
 app.use(jobRoutes); 
-app.use(appRoutes);
 app.use(cors());
+app.use("/api", appRoutes); 
 
 
 // Configure Cloudinary with your credentials
