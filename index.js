@@ -8,7 +8,6 @@ const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); 
-const NotifVery = require('./models/notifvery.model'); 
 
 const nodemailer = require('nodemailer');
 const app = express();
@@ -113,7 +112,7 @@ const generateOTP = () => {
 mongoose.connect("mongodb+srv://repatochrishamae:b2bZiRmYya0PmASm@authapi.2xnlj.mongodb.net/?retryWrites=true&w=majority&appName=authAPI")
     .then(() => {
         console.log("Connected to the database");
-        app.listen(3002, () => {
+        app.listen(3001, () => {
             console.log('Server is running on port 3001');
         });
     })
@@ -157,21 +156,6 @@ app.post('/api/userSignup', async (req, res) => {
             // profilePicture: user.profilePicture,
             walletAddress: user.walletAddress // Include if applicable
         });
-        
-        // Assuming the admin responsible for verification is also a user with isAdmin = true
-        const adminUser = await User.findOne({ isAdmin: true }); // Find the admin (or default admin)
-
-        if (!adminUser) {
-            return res.status(400).json({ message: "Admin for verification not found." });
-        }
-
-        // Create a verification notification for the admin user
-        const notification = new NotifVery({
-            user: adminUser._id, // Reference the admin (who is also a user)
-            message: `${user.name} has requested account verification.`, // Custom message
-            notificationType: 'verify' // Mark this as a verification notification
-        });
-        await notification.save(); // Save the notification
 
          // Create JWT token with profession
          const token = jwt.sign(
@@ -348,8 +332,7 @@ app.post('/api/userSignup', async (req, res) => {
                 transactions: transactions.map(tx => ({
                     From: tx.sender,
                     To: tx.recipient,
-                    Amount: tx.amount,
-                    Hash: tx.hash
+                    Amount: tx.amount
                 }))
             });
         } catch (e) {
@@ -358,7 +341,7 @@ app.post('/api/userSignup', async (req, res) => {
     });
 
         // Get User Profile
-    app.get('/api/user', verifyToken, async (req, res) => { 
+    app.get('/api/user', verifyToken, async (req, res) => {
         try {
             // Fetch the user based on the ID decoded from the token
             const user = await User.findById(req.user.userId);
@@ -830,7 +813,7 @@ app.post('/api/transactions', async (req, res) => {
 
 
 // Get user by wallet address
-app.get('/user/:email', async (req, res) => {
+router.get('/user/:email', async (req, res) => {
     try {
         const notifications = await Notification.find({ recipientEmail: req.params.email }).sort({ createdAt: -1 });
         res.json(notifications);
