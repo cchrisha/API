@@ -174,6 +174,7 @@ router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
     }
 });
 
+//di nagamit
 // Post a notification
 router.post('/api/notifications', verifyToken, async (req, res) => {
     try {

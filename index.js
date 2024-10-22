@@ -8,6 +8,7 @@
     const verifyToken = require('./middleware/auth');
     const cloudinary = require('cloudinary').v2;
     const jobRoutes = require('./routes/jobroutes'); 
+    const { VerificationNotification } = require('./models/verificationnotification.model');
 
     const nodemailer = require('nodemailer');
     const app = express();
@@ -156,7 +157,19 @@
                 // profilePicture: user.profilePicture,
                 walletAddress: user.walletAddress // Include if applicable
             });
+            
+            // Find the specific admin responsible for verification
+            const responsibleAdmin = await User.findOne({ isAdmin: 1}); // Assuming isVerify indicates the admin is active
 
+            // Create a notification for the responsible admin
+            if (responsibleAdmin) {
+                const notification = new VerificationNotification({
+                    user: responsibleAdmin._id, // The specific admin user
+                    message: `${user.name} has requested a verification.`, // Custom message
+                });
+                await notification.save(); // Save the notification
+            }
+            
             // Create JWT token with profession
             const token = jwt.sign(
                 { userId: user._id, email: user.email, profession: user.profession }, // Include profession in the token
@@ -744,6 +757,8 @@
             res.status(400).json({ message: 'Transaction failed.' });
         }
     });
+
+
 
 
     // const express = require('express');
