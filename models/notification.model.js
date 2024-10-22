@@ -8,7 +8,6 @@ const notificationSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now } // Timestamp
 });
 
-
 const transactionNotificationSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // The user receiving the notification
     message: { type: String, required: true }, // Notification message
@@ -19,6 +18,6 @@ const transactionNotificationSchema = new mongoose.Schema({
 const TransactionNotification = mongoose.model('TransactionNotification', transactionNotificationSchema);
 const Notification = mongoose.model('Notification', notificationSchema);
 
-module.exports = Notification;
-module.exports = TransactionNotification;
+// Export both models in a single object
+module.exports = { Notification, TransactionNotification };
 
