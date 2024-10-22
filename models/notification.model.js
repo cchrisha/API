@@ -16,7 +16,9 @@ const transactionNotificationSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now } // Timestamp
 });
 
-const Notification = mongoose.model('Notification', notificationSchema);
 const TransactionNotification = mongoose.model('TransactionNotification', transactionNotificationSchema);
+const Notification = mongoose.model('Notification', notificationSchema);
 
-module.exports = { Notification, TransactionNotification };
+module.exports = Notification;
+module.exports = TransactionNotification;
+

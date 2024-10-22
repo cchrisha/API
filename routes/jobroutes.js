@@ -301,7 +301,7 @@ router.get('/api/jobs/:jobId/workers', async (req, res) => {
     }
 });
 
-
+//notif ni lana
 // Accept/Reject Job Request
 router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => {
     try {
@@ -481,6 +481,8 @@ router.post('/transaction-notifications', async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
+
+
 // Get all transaction notifications for a user
 router.get('/transaction-notifications/:userId', async (req, res) => {
     const { userId } = req.params;
