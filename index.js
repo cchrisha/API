@@ -471,7 +471,7 @@ app.post('/api/userSignup', async (req, res) => {
 //     }
 // });
 
-// Login 
+// Login ginalaw ni marvin
 app.post('/api/userLogin', async (req, res) => {
     try {
         const { email, password, walletAddress } = req.body; // Add walletAddress
@@ -519,12 +519,12 @@ app.post('/api/userLogin', async (req, res) => {
             'your_secret_key'
         );  
 
-        // Return success response for regular user, including user name
+        // Return success response for regular user, including user ID
         return res.status(200).json({ 
             message: "Login successful", 
             success: true, 
             token, 
-            _id: user._id, 
+            _id: user._id,  // Return user ID here
             role: "User",
             isVerify: user.isVerify,
             name: user.name // Include user name here
@@ -537,6 +537,8 @@ app.post('/api/userLogin', async (req, res) => {
         });
     }
 });
+
+
 
 // User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
