@@ -1,15 +1,17 @@
 // controllers/NotificationController.js
 const Notification = require('../models/notification/notif.model');
-const User = require('../models/user.model'); // Correct path to the User model
+const User = require('../models/user.model'); // Correct the import path for User model
 
 // Controller method to create a notification
 async function createNotification(req, res) {
     try {
+        console.log('Request Body:', req.body); // Log the incoming request body
+
         const { userId, message } = req.body;
 
         // Check for required fields
         if (!userId || !message) {
-            return res.status(400).json({ message: "Missing required fields." });
+            return res.status(400).json({ message: "Missing required fields????." });
         }
 
         // Validate that the user exists
@@ -18,9 +20,11 @@ async function createNotification(req, res) {
             return res.status(404).json({ message: "User not found." });
         }
 
+        // Create the notification
         const notification = await Notification.create({ userId, message });
         res.status(201).json(notification);
     } catch (error) {
+        console.error('Error creating notification:', error); // Log the error for debugging
         res.status(500).json({ error: 'Failed to create notification' });
     }
 }
@@ -31,6 +35,7 @@ async function getUserNotifications(req, res) {
         const notifications = await Notification.find({ userId: req.params.userId });
         res.json(notifications);
     } catch (error) {
+        console.error('Error retrieving notifications:', error); // Log the error for debugging
         res.status(500).json({ error: 'Failed to retrieve notifications' });
     }
 }
