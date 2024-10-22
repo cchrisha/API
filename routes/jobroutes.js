@@ -472,7 +472,6 @@ router.post('/transaction-notifications', async (req, res) => {
         const notification = new TransactionNotification({
             user,
             message,
-            transactionHash,
         });
 
         await notification.save();
