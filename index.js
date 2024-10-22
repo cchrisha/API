@@ -119,7 +119,7 @@ app.post('/send-otp', (req, res) => {
     if (isEmail(contact)) {
       // Send OTP to email
       transporter.sendMail({
-        from: 'your-email@gmail.com',
+        from: 'community.guild.services@gmail.com',
         to: contact,
         subject: 'Your OTP Code',
         text: `Your OTP code is: ${otp}`,
@@ -132,7 +132,7 @@ app.post('/send-otp', (req, res) => {
       const client = twilio('ACCOUNT_SID', 'AUTH_TOKEN');
       client.messages.create({
         body: `Your OTP code is: ${otp}`,
-        from: 'YOUR_TWILIO_NUMBER',
+        from: 'community.guild.services',
         to: contact,
       })
       .then(message => res.status(200).send('OTP sent to phone number'))
