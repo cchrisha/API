@@ -6,10 +6,7 @@ const Job = require('../models/job.model.js');  // Make sure Job model is import
 const mongoose = require('mongoose');
 const { Parser } = require('json2csv');
 const User = require('../models/user.model.js');  // Adjust the path if necessary
-// const Notification = require('../models/notification.model'); // Import Notification model
-// const TransactionNotification = require('../models/notification.model');
 const { Notification, TransactionNotification } = require('../models/notification.model');
-
 // Post a Job
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
@@ -143,6 +140,7 @@ router.get('/api/alljobs', async (req, res) => {
     }
 });
 
+//notif ni lana
 // Post job request
 router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
     try {
@@ -303,7 +301,7 @@ router.get('/api/jobs/:jobId/workers', async (req, res) => {
     }
 });
 
-//notif ni lana
+
 // Accept/Reject Job Request
 router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => {
     try {
