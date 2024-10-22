@@ -7,19 +7,15 @@ const jwt = require('jsonwebtoken');
 const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
-const appRoutes = require('./routes/approutes');
 const jobRoutes = require('./routes/jobroutes'); 
-const nodemailer = require('nodemailer');
-// const sendSMS = require('./routes/smsService');
-const app = express();
-const notificationRoutes = require('./routes/notificationRoutes');
 
+const nodemailer = require('nodemailer');
+const app = express();
 app.use(express.json());
+app.use(jobRoutes); 
 app.use(cors());
 
-app.use(jobRoutes); 
-app.use('/api', appRoutes);
-app.use('/api', notificationRoutes)
+
 // Configure Cloudinary with your credentials
 cloudinary.config({
     cloud_name: 'dx5reijcv',
@@ -792,7 +788,6 @@ app.post('/api/resetPassword', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
-
 app.post('/api/transactions', async (req, res) => {
     const { senderId, receiverId, amount } = req.body;
 
@@ -816,174 +811,5 @@ app.post('/api/transactions', async (req, res) => {
     }
 });
 
-app.post('/send-notification', async (req, res) => {
-    const { to, title, body } = req.body;
-  
-    const message = {
-      notification: {
-        title: title,
-        body: body,
-      },
-      token: to, // The recipient's FCM token
-    };
-  
-    try {
-      const response = await admin.messaging().send(message);
-      console.log('Successfully sent message:', response);
-      return res.status(200).json({ success: true, messageId: response });
-    } catch (error) {
-      console.error('Error sending message:', error);
-      return res.status(500).json({ success: false, error: error.message });
-    }
-  });
 
 
-
-
-
-
-
-  // Verify Account
-app.post('/api/verifyAccount', async (req, res) => {
-    try {
-        const { email } = req.body;
-
-        // Find the user by email
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ message: "User with this email does not exist" });
-        }
-
-        // Generate a 6-digit OTP
-        const otp = generateOTP();
-        const otpExpiry = Date.now() + 300000; // OTP valid for 5 minutes
-
-        // Save OTP and expiry to user document
-        user.otp = otp; 
-        user.otpExpiry = otpExpiry;
-        await user.save();
-
-        // Send email with the OTP
-        const mailOptions = {
-            from: 'community.guild.services@gmail.com',
-            to: user.email,
-            subject: 'Verify Your Account',
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
-                    <h2 style="color: #333; text-align: center;">Account Verification</h2>
-                    <p>Hello ${user.name},</p> <!-- Personalized greeting -->
-                    <p>Thank you for registering with us. Your OTP to verify your account is:</p>
-                    <div style="background-color: #f9f9f9; border: 1px solid #ccc; border-radius: 4px; padding: 10px; text-align: center; font-size: 24px; font-weight: bold; color: #333;">
-                        ${otp}
-                    </div>
-                    <p style="margin-top: 20px;">This OTP is valid for 5 minutes. Please use this code to verify your account. If you did not request this, please ignore this email.</p>
-                    <p style="text-align: center;">Best regards,<br>Community Guild Services</p>
-                </div>
-            `
-        };
-
-        // Send email
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                return res.status(500).json({ message: 'Error sending email', error: error.message });
-            }
-            res.status(200).json({ message: 'Verification OTP sent to your email', info });
-        });
-
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// Verify OTP for Account Verification
-app.post('/api/verifyAccountOtp', async (req, res) => {
-    try {
-        const { email, otp } = req.body;
-
-        // Find the user by email
-        const user = await User.findOne({ email });
-        if (!user) {
-            return res.status(404).json({ message: "User with this email does not exist" });
-        }
-
-        // Check if the OTP is valid and not expired
-        if (user.otp !== otp || Date.now() > user.otpExpiry) {
-            return res.status(400).json({ message: "Invalid or expired OTP" });
-        }
-
-        // OTP verified successfully, mark the account as verified
-        user.otp = undefined;
-        user.otpExpiry = undefined;
-        user.isVerify = 1; // Change isVerify to 1, indicating account is verified
-        await user.save();
-
-        res.status(200).json({ message: "Account verified successfully." });
-
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// app.post('/api/verifyAccountNum', async (req, res) => {
-//     try {
-//         const { contact } = req.body;
-
-//         // Find the user by phone number
-//         const user = await User.findOne({ contact });
-//         if (!user) {
-//             return res.status(404).json({ message: "User with this phone number does not exist" });
-//         }
-
-//         // Generate a 6-digit OTP
-//         const otp = generateOTP();
-//         const otpExpiry = Date.now() + 300000; // OTP valid for 5 minutes
-
-//         // Save OTP and expiry to user document
-//         user.otp = otp; 
-//         user.otpExpiry = otpExpiry;
-//         await user.save();
-
-//         // Send SMS with the OTP using Twilio
-//         const message = `Your OTP for account verification is: ${otp}. This OTP is valid for 5 minutes.`;
-        
-//         await client.messages.create({
-//             body: message,
-//             from: 'your_twilio_phone_number', // Your Twilio number
-//             to: contact // User's phone number
-//         });
-
-//         res.status(200).json({ message: 'Verification OTP sent to your phone' });
-
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
-
-
-// app.post('/api/verifyAccountNumOtp', async (req, res) => {
-//     try {
-//         const { phoneNumber, otp } = req.body; // Change to phoneNumber
-
-//         // Find the user by phone number
-//         const user = await User.findOne({ phoneNumber });
-//         if (!user) {
-//             return res.status(404).json({ message: "User with this phone number does not exist" });
-//         }
-
-//         // Check if the OTP is valid and not expired
-//         if (user.otp !== otp || Date.now() > user.otpExpiry) {
-//             return res.status(400).json({ message: "Invalid or expired OTP" });
-//         }
-
-//         // OTP verified successfully, mark the account as verified
-//         user.otp = undefined;
-//         user.otpExpiry = undefined;
-//         user.isVerify = 1; // Change isVerify to 1, indicating account is verified
-//         await user.save();
-
-//         res.status(200).json({ message: "Account verified successfully." });
-
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
