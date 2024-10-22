@@ -1,9 +1,10 @@
+const express = require("express");
+const router = express.Router(); // Fixed: use express.Router()
+
 const pushNotificationController = require("../controllers/push-notification.controllers");
 
-const express = require("express");
-const router = require.Router();
-
+// Define routes
 router.get("/SendNotification", pushNotificationController.SendNotification);
 router.post("/SendNotificationToDevice", pushNotificationController.SendNotificationToDevice);
 
-module.exports = router;
+module.exports = router; // Export the router

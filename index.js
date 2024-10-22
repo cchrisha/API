@@ -8,10 +8,12 @@ const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); 
+const appRoutes = require('./routes/approutes');
 const nodemailer = require('nodemailer');
 const app = express();
 app.use(express.json());
 app.use(jobRoutes); 
+app.use(appRoutes);
 app.use(cors());
 
 
