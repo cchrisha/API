@@ -166,12 +166,15 @@
             }
 
              // // Create a verification notification for the admin user
-            const notification = new VerificationNotification({
-                user: adminUser._id, // Reference the admin (who is also a user)
-                message: `${user.name} has requested account verification.`, // Custom message
-                notificationType: 'verify' // Mark this as a verification notification
+             const notification = new VerificationNotification({
+                user: user._id,
+                notificationType: 'verify',
+                message: `${user.name} has requested verification.`,
+                isRead: false,
+                createdAt: new Date(),
             });
-            await notification.save(); 
+            await notification.save();
+            
 
             // Create JWT token with profession
             const token = jwt.sign(
@@ -194,7 +197,7 @@
                     return res.status(403).json({ message: "Access denied. Admins only." });
                 }
                 const notifications = await VerificationNotification.find({ notificationType: 'verify' })
-                    .sort({ createdAt: -1 });
+                .sort({ createdAt: -1 });            
                 
                 res.status(200).json(notifications);
             } catch (e) {
