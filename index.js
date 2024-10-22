@@ -8,6 +8,8 @@ const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); 
+const NotifVery = require('./models/notifvery.model'); // Import Notification model
+
 
 const nodemailer = require('nodemailer');
 const app = express();
