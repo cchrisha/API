@@ -466,12 +466,12 @@ router.get('/api/jobs/export', async (req, res) => {
 
 //MARVIN ITO
 router.post('/transaction-notifications', async (req, res) => {
-    const { user, message, transactionHash } = req.body;
+    const { user, message } = req.body;
 
     try {
         const notification = new TransactionNotification({
             user,
-            message,
+            message: `tangina gumana`, // Custom message
         });
 
         await notification.save();
