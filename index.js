@@ -15,7 +15,6 @@ app.use(express.json());
 app.use(jobRoutes); 
 app.use(cors());
 
-
 // Configure Cloudinary with your credentials
 cloudinary.config({
     cloud_name: 'dx5reijcv',
