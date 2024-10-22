@@ -14,6 +14,10 @@ app.use(express.json());
 app.use(jobRoutes); 
 app.use(cors());
 const twilio = require('twilio');
+const bodyParser = require('body-parser');
+
+// Middleware to parse JSON requests
+app.use(bodyParser.json());
 
 // Configure Cloudinary with your credentials
 cloudinary.config({
