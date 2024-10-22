@@ -10,6 +10,7 @@ const cloudinary = require('cloudinary').v2;
 const appRoutes = require('./routes/approutes');
 const jobRoutes = require('./routes/jobroutes'); 
 const nodemailer = require('nodemailer');
+// const sendSMS = require('./routes/smsService');
 const app = express();
 const notificationRoutes = require('./routes/notificationRoutes');
 
@@ -922,3 +923,67 @@ app.post('/api/verifyAccountOtp', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
+// app.post('/api/verifyAccountNum', async (req, res) => {
+//     try {
+//         const { contact } = req.body;
+
+//         // Find the user by phone number
+//         const user = await User.findOne({ contact });
+//         if (!user) {
+//             return res.status(404).json({ message: "User with this phone number does not exist" });
+//         }
+
+//         // Generate a 6-digit OTP
+//         const otp = generateOTP();
+//         const otpExpiry = Date.now() + 300000; // OTP valid for 5 minutes
+
+//         // Save OTP and expiry to user document
+//         user.otp = otp; 
+//         user.otpExpiry = otpExpiry;
+//         await user.save();
+
+//         // Send SMS with the OTP using Twilio
+//         const message = `Your OTP for account verification is: ${otp}. This OTP is valid for 5 minutes.`;
+        
+//         await client.messages.create({
+//             body: message,
+//             from: 'your_twilio_phone_number', // Your Twilio number
+//             to: contact // User's phone number
+//         });
+
+//         res.status(200).json({ message: 'Verification OTP sent to your phone' });
+
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
+
+// app.post('/api/verifyAccountNumOtp', async (req, res) => {
+//     try {
+//         const { phoneNumber, otp } = req.body; // Change to phoneNumber
+
+//         // Find the user by phone number
+//         const user = await User.findOne({ phoneNumber });
+//         if (!user) {
+//             return res.status(404).json({ message: "User with this phone number does not exist" });
+//         }
+
+//         // Check if the OTP is valid and not expired
+//         if (user.otp !== otp || Date.now() > user.otpExpiry) {
+//             return res.status(400).json({ message: "Invalid or expired OTP" });
+//         }
+
+//         // OTP verified successfully, mark the account as verified
+//         user.otp = undefined;
+//         user.otpExpiry = undefined;
+//         user.isVerify = 1; // Change isVerify to 1, indicating account is verified
+//         await user.save();
+
+//         res.status(200).json({ message: "Account verified successfully." });
+
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
