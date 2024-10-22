@@ -209,18 +209,23 @@
                 if (!user) {
                     return res.status(404).json({ message: "User not found." });
                 }
+        
+                console.log("Verification request by user:", user.name); // Add this log to track requests.
+        
                 const notification = new VerificationNotification({
-                                user: user._id,
-                                notificationType: 'verify',
-                                message: `${user.name} has requested verification.`,
-                                isRead: false,
-                                createdAt: new Date(),
-                            });
+                    user: user._id,
+                    notificationType: 'verify',
+                    message: `${user.name} has requested verification.`,
+                    isRead: false,
+                    createdAt: new Date(),
+                });
+                await notification.save();
                 res.status(201).json({ message: "Verification request sent successfully." });
-                } catch (e) {
+            } catch (e) {
                 res.status(500).json({ message: e.message });
             }
         });
+        
 
         // Mark a user verification notification as approved or denied
 app.put('/api/notifications/verify/:notificationId', verifyToken, async (req, res) => {
