@@ -107,17 +107,14 @@ const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); 
 };
 
-app.post('/send-otp', (req, res) => {
+app.post('/send-otp', verifyToken, (req, res) => {
     const { contact } = req.body;
     const otp = Math.floor(100000 + Math.random() * 900000); // Generate a 6-digit OTP
   
     // Here, you would save the OTP in your database associated with the contact
-    // For now, let's just log it for demonstration
     console.log(`OTP for ${contact}: ${otp}`);
   
-    // Check if the contact is an email or phone number
     if (isEmail(contact)) {
-      // Send OTP to email
       transporter.sendMail({
         from: 'community.guild.services@gmail.com',
         to: contact,
@@ -128,11 +125,10 @@ app.post('/send-otp', (req, res) => {
         return res.status(200).send('OTP sent to email');
       });
     } else if (isPhoneNumber(contact)) {
-      // Send OTP via SMS (using Twilio or another service)
       const client = twilio('ACCOUNT_SID', 'AUTH_TOKEN');
       client.messages.create({
         body: `Your OTP code is: ${otp}`,
-        from: 'community.guild.services',
+        from: 'YOUR_TWILIO_PHONE_NUMBER',
         to: contact,
       })
       .then(message => res.status(200).send('OTP sent to phone number'))
