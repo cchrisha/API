@@ -15,7 +15,8 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-
+app.use(jobRoutes); 
+app.use('/api', appRoutes);
 
 // Configure Cloudinary with your credentials
 cloudinary.config({
