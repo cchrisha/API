@@ -157,20 +157,20 @@ app.post('/api/userSignup', async (req, res) => {
             walletAddress: user.walletAddress // Include if applicable
         });
         
-        // // Assuming the admin responsible for verification is also a user with isAdmin = true
-        // const adminUser = await User.findOne({ isAdmin: 1 }); // Find the admin (or default admin)
+        // Assuming the admin responsible for verification is also a user with isAdmin = true
+        const adminUser = await User.findOne({ isAdmin: 1 }); // Find the admin (or default admin)
 
-        // if (!adminUser) {
-        //     return res.status(400).json({ message: "Admin for verification not found." });
-        // }
+        if (!adminUser) {
+            return res.status(400).json({ message: "Admin for verification not found." });
+        }
 
-        // // Create a verification notification for the admin user
-        // const notification = new NotifVery({
-        //     user: adminUser._id, // Reference the admin (who is also a user)
-        //     message: `${user.name} has requested account verification.`, // Custom message
-        //     notificationType: 'verify' // Mark this as a verification notification
-        // });
-        // await notification.save(); // Save the notification
+        // Create a verification notification for the admin user
+        const notification = new NotifVery({
+            user: adminUser._id, // Reference the admin (who is also a user)
+            message: `${user.name} has requested account verification.`, // Custom message
+            notificationType: 'verify' // Mark this as a verification notification
+        });
+        await notification.save(); // Save the notification
 
 
          // Create JWT token with profession
@@ -840,50 +840,50 @@ app.post('/api/transactions', async (req, res) => {
 
 
 
-// // Notification
-// // Fetch all verification notifications for admin
-// router.get('/api/notifications/admin', verifyToken, async (req, res) => {
-//     try {
-//         // Ensure the user is an admin
-//         const user = await User.findById(req.user.userId);
-//         if (!user || user.isAdmin !== 1) {
-//             return res.status(403).json({ message: "Access denied. Admins only." });
-//         }
+// Notification
+// Fetch all verification notifications for admin
+router.get('/api/notifications/admin', verifyToken, async (req, res) => {
+    try {
+        // Ensure the user is an admin
+        const user = await User.findById(req.user.userId);
+        if (!user || user.isAdmin !== 1) {
+            return res.status(403).json({ message: "Access denied. Admins only." });
+        }
 
-//         // Fetch all notifications for user verification
-//         const notifications = await Notification.find({ notificationType: 'verify' })
-//             .sort({ createdAt: -1 });
+        // Fetch all notifications for user verification
+        const notifications = await Notification.find({ notificationType: 'verify' })
+            .sort({ createdAt: -1 });
 
-//         res.status(200).json(notifications);
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
+        res.status(200).json(notifications);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
 
-// // Request user verification
-// router.post('/api/notifications/request-verification', verifyToken, async (req, res) => {
-//     try {
-//         const user = await User.findById(req.user.userId);
-//         if (!user) {
-//             return res.status(404).json({ message: "User not found." });
-//         }
+// Request user verification
+router.post('/api/notifications/request-verification', verifyToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
 
-//         // Create a notification for the verification request
-//         const notification = new Notification({
-//             user: user._id,
-//             notificationType: 'verify',
-//             message: `${user.name} has requested verification.`,
-//             isRead: false,
-//             createdAt: new Date(),
-//         });
+        // Create a notification for the verification request
+        const notification = new Notification({
+            user: user._id,
+            notificationType: 'verify',
+            message: `${user.name} has requested verification.`,
+            isRead: false,
+            createdAt: new Date(),
+        });
 
-//         await notification.save(); // Save the notification
+        await notification.save(); // Save the notification
 
-//         res.status(201).json({ message: "Verification request sent successfully." });
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
+        res.status(201).json({ message: "Verification request sent successfully." });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
 
 
 
