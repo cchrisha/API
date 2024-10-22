@@ -7,16 +7,14 @@ const jwt = require('jsonwebtoken');
 const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
-const appRoutes = require('./routes/approutes');
 const jobRoutes = require('./routes/jobroutes'); 
+
 const nodemailer = require('nodemailer');
 const app = express();
-
 app.use(express.json());
+app.use(jobRoutes); 
 app.use(cors());
 
-app.use(jobRoutes); 
-app.use('/api', appRoutes);
 
 // Configure Cloudinary with your credentials
 cloudinary.config({
@@ -812,27 +810,6 @@ app.post('/api/transactions', async (req, res) => {
         res.status(400).json({ message: 'Transaction failed.' });
     }
 });
-
-app.post('/send-notification', async (req, res) => {
-    const { to, title, body } = req.body;
-  
-    const message = {
-      notification: {
-        title: title,
-        body: body,
-      },
-      token: to, // The recipient's FCM token
-    };
-  
-    try {
-      const response = await admin.messaging().send(message);
-      console.log('Successfully sent message:', response);
-      return res.status(200).json({ success: true, messageId: response });
-    } catch (error) {
-      console.error('Error sending message:', error);
-      return res.status(500).json({ success: false, error: error.message });
-    }
-  });
 
 
 
