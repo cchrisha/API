@@ -468,12 +468,13 @@ router.get('/api/jobs/export', async (req, res) => {
 
 //MARVIN ITO
 router.post('/transaction-notifications', async (req, res) => {
-    const { user, message, transactionHash } = req.body;
+    const { user, message } = req.body; // Removed transactionHash from here
 
     try {
         const notification = new TransactionNotification({
             user,
             message,
+            // No need to include transactionHash
         });
 
         await notification.save();
@@ -482,7 +483,6 @@ router.post('/transaction-notifications', async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 });
-
 // Get all transaction notifications for a user
 router.get('/transaction-notifications/:userId', async (req, res) => {
     const { userId } = req.params;
