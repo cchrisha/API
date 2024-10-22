@@ -811,5 +811,26 @@ app.post('/api/transactions', async (req, res) => {
     }
 });
 
+app.post('/send-notification', async (req, res) => {
+    const { to, title, body } = req.body;
+  
+    const message = {
+      notification: {
+        title: title,
+        body: body,
+      },
+      token: to, // The recipient's FCM token
+    };
+  
+    try {
+      const response = await admin.messaging().send(message);
+      console.log('Successfully sent message:', response);
+      return res.status(200).json({ success: true, messageId: response });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      return res.status(500).json({ success: false, error: error.message });
+    }
+  });
+
 
 
