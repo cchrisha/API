@@ -226,7 +226,7 @@
             }
         });
 // Mark a notification as read 
-app.put('/api/notifications/:id/read', verifyToken, async (req, res) => {
+app.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
     try {
         const notificationId = req.params.id;
 
@@ -245,10 +245,6 @@ app.put('/api/notifications/:id/read', verifyToken, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
-
-
-
-        
 
         // Mark a user verification notification as approved or denied
 app.put('/api/notifications/verify/:notificationId', verifyToken, async (req, res) => {
