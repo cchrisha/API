@@ -159,19 +159,19 @@
             });
 
             // // Assuming the admin responsible for verification is also a user with isAdmin = true
-            const adminUser = await User.findOne({ isAdmin: 1 }); // Find the admin (or default admin)
+            // const adminUser = await User.findOne({ isAdmin: 1 }); // Find the admin (or default admin)
 
-            if (!adminUser) {
-                return res.status(400).json({ message: "Admin for verification not found." });
-            }
+            // if (!adminUser) {
+            //     return res.status(400).json({ message: "Admin for verification not found." });
+            // }
 
-             // // Create a verification notification for the admin user
-            const notification = new VerificationNotification({
-                user: adminUser._id, // Reference the admin (who is also a user)
-                message: `${user.name} has requested account verification.`, // Custom message
-                notificationType: 'verify' // Mark this as a verification notification
-            });
-            await notification.save(); 
+            //  // // Create a verification notification for the admin user
+            // const notification = new VerificationNotification({
+            //     user: adminUser._id, // Reference the admin (who is also a user)
+            //     message: `${user.name} has requested account verification.`, // Custom message
+            //     notificationType: 'verify' // Mark this as a verification notification
+            // });
+            // await notification.save(); 
 
             // Create JWT token with profession
             const token = jwt.sign(
@@ -270,16 +270,14 @@ app.post('/api/notifications/request-verification', verifyToken, async (req, res
 // Mark a notification as read 
 app.put('/api/notifications/admin/:notificationId/read', verifyToken, async (req, res) => {
     try {
-        // Ensure the user is an admin
         const user = await User.findById(req.user.userId);
         if (!user || user.isAdmin !== 1) {
             return res.status(403).json({ message: "Access denied. Admins only." });
         }
 
         const notification = await Notification.findById(req.params.notificationId);
-
-        if (!notification || notification.user.toString() !== req.user.userId) {
-            return res.status(404).json({ message: "Notification not found or access denied." });
+        if (!notification) {
+            return res.status(404).json({ message: "Notification not found." });
         }
 
         notification.isRead = true;
@@ -287,9 +285,11 @@ app.put('/api/notifications/admin/:notificationId/read', verifyToken, async (req
 
         res.status(200).json({ message: "Notification marked as read" });
     } catch (e) {
+        console.error("Error marking notification as read:", e); // Log the error for debugging
         res.status(500).json({ message: e.message });
     }
 });
+
 
         
 
