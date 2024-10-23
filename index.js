@@ -225,70 +225,27 @@
                 res.status(500).json({ message: e.message });
             }
         });
-
-        // Fetch all verification notifications for admin
-app.get('/api/notifications/admin', verifyToken, async (req, res) => {
-    try {
-        // Ensure the user is an admin
-        const user = await User.findById(req.user.userId);
-        if (!user || user.isAdmin !== 1) {
-            return res.status(403).json({ message: "Access denied. Admins only." });
-        }
-        const notifications = await VerificationNotification.find({ notificationType: 'verify' })
-            .sort({ createdAt: -1 });
-        
-        res.status(200).json(notifications);
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// Request user verification
-app.post('/api/notifications/request-verification', verifyToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found." });
-        }
-
-        console.log("Verification request by user:", user.name); // Log to track requests.
-
-        const notification = new VerificationNotification({
-            user: user._id,
-            notificationType: 'verify',
-            message: `${user.name} has requested verification.`,
-            isRead: false,
-            createdAt: new Date(),
-        });
-        await notification.save();
-        res.status(201).json({ message: "Verification request sent successfully." });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
 // Mark a notification as read 
-app.put('/api/notifications/admin/:notificationId/read', verifyToken, async (req, res) => {
+app.put('/api/notifications/:id/read', verifyToken, async (req, res) => {
     try {
-        const user = await User.findById(req.user.userId);
-        if (!user || user.isAdmin !== 1) {
-            return res.status(403).json({ message: "Access denied. Admins only." });
-        }
+        const notificationId = req.params.id;
 
-        const notification = await Notification.findById(req.params.notificationId);
+        // Find the notification by ID
+        const notification = await VerificationNotification.findById(notificationId);
         if (!notification) {
             return res.status(404).json({ message: "Notification not found." });
         }
 
+        // Mark the notification as read
         notification.isRead = true;
         await notification.save();
 
-        res.status(200).json({ message: "Notification marked as read" });
+        res.status(200).json({ message: "Notification marked as read." });
     } catch (e) {
-        console.error("Error marking notification as read:", e); // Log the error for debugging
         res.status(500).json({ message: e.message });
     }
 });
+
 
 
         
