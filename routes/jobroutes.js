@@ -98,7 +98,7 @@ router.get('/api/jobs/recent', async (req, res) => {
     }
 });
 
-
+//get user jobs all
 router.get('/api/user/:userId/jobs/all', async (req, res) => {
     try {
         const userId = req.params.userId;
@@ -177,38 +177,6 @@ router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
 //di nagamit
 // Post a notification
 router.post('/api/notifications', verifyToken, async (req, res) => {
-/**
- * Posts a new notification to the database.
- *
- * @function
- * @param {object} req - The request object containing the notification data.
- * @param {object} res - The response object to send back to the client.
- * @param {string} req.body.user - The ID of the user to receive the notification.
- * @param {string} req.body.message - The content of the notification.
- * @param {string} req.body.job - The ID of the associated job.
- * @returns {object} - A JSON object containing a success message or an error message.
- */
-router.post('/api/notifications', verifyToken, async (req, res) => {
-    try {
-        const { user, message, job } = req.body;
-
-        // Validate the request body
-        if (!user || !message || !job) {
-            return res.status(400).json({ message: "Missing required fields." });
-        }
-
-        const notification = new Notification({
-            user, // The user ID of the notification recipient
-            message,
-            job, // The associated job ID
-        });
-        await notification.save(); // Save notification
-
-        res.status(201).json({ message: "Notification created successfully." });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
     try {
         const { user, message, job } = req.body;
 
@@ -339,7 +307,7 @@ router.get('/api/jobs/:jobId/workers', async (req, res) => {
 router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => {
     try {
         const { action } = req.body; // 'accept' or 'reject'
-        const job = await Job.findById(req.params.jobId);
+        const job = await Job.findById(req.params.jobId).populate('poster', 'name'); // Get poster name
         const requestIndex = job.requests.findIndex(r => r.user.toString() === req.params.userId);
 
         if (requestIndex === -1) return res.status(404).json({ message: "Request not found" });
@@ -351,48 +319,124 @@ router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => 
             job.workers.push({ user: request.user, status: 'working on' });
             job.requests.splice(requestIndex, 1); // Remove the request from the array
             
-            // Update user's job list (assuming User model is imported)
-            const user = await User.findById(request.user); // Replace with your User model
+            // Update user's job list
+            const user = await User.findById(request.user);
             if (!user.jobs) {
                 user.jobs = []; // Initialize jobs array if it doesn't exist
             }
             user.jobs.push({ job: job._id, status: 'working on' });
             await user.save();
+
+            // Create notification for the applicant
+            const notification = new Notification({
+                user: request.user, // The applicant
+                message: `Job poster ${job.poster.name} has accepted your application for the job: ${job.title}`,
+                job: job._id
+            });
+            await notification.save();
         } else if (action === 'reject') {
             request.status = 'rejected';
+            
+            // Create notification for the applicant
+            const notification = new Notification({
+                user: request.user, // The applicant
+                message: `Job poster ${job.poster.name} has rejected your application for the job: ${job.title}`,
+                job: job._id
+            });
+            await notification.save();
         }
+        
         await job.save();
-
         res.status(200).json(job);
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+
+// router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => {
+//     try {
+//         const { action } = req.body; // 'accept' or 'reject'
+//         const job = await Job.findById(req.params.jobId);
+//         const requestIndex = job.requests.findIndex(r => r.user.toString() === req.params.userId);
+
+//         if (requestIndex === -1) return res.status(404).json({ message: "Request not found" });
+
+//         const request = job.requests[requestIndex];
+
+//         if (action === 'accept') {
+//             // Add user to workers and remove from requests
+//             job.workers.push({ user: request.user, status: 'working on' });
+//             job.requests.splice(requestIndex, 1); // Remove the request from the array
+            
+//             // Update user's job list (assuming User model is imported)
+//             const user = await User.findById(request.user); // Replace with your User model
+//             if (!user.jobs) {
+//                 user.jobs = []; // Initialize jobs array if it doesn't exist
+//             }
+//             user.jobs.push({ job: job._id, status: 'working on' });
+//             await user.save();
+//         } else if (action === 'reject') {
+//             request.status = 'rejected';
+//         }
+//         await job.save();
+
+//         res.status(200).json(job);
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
 
 // Update Worker Status (Mark as Done or Cancelled)
 router.put('/api/jobs/:jobId/workers/:userId', verifyToken, async (req, res) => {
     try {
         const { action } = req.body; // 'done' or 'canceled'
-        const job = await Job.findById(req.params.jobId);
+        const job = await Job.findById(req.params.jobId).populate('poster', 'name'); // Get poster name
         const workerIndex = job.workers.findIndex(w => w.user.toString() === req.params.userId);
 
         if (workerIndex === -1) return res.status(404).json({ message: "Worker not found" });
 
         if (action === 'done' || action === 'canceled') {
-            // Update status instead of removing the worker
+            // Update worker status
             job.workers[workerIndex].status = action;
-        } else {
-            job.workers[workerIndex].status = action; // This covers other status updates
+
+            // Create notification for the worker
+            const notification = new Notification({
+                user: job.workers[workerIndex].user, // The worker
+                message: `Job poster ${job.poster.name} has marked you "${action}" for the job: ${job.title}`,
+                job: job._id
+            });
+            await notification.save();
         }
 
         await job.save();
-
         res.status(200).json(job);
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
 
+// router.put('/api/jobs/:jobId/workers/:userId', verifyToken, async (req, res) => {
+//     try {
+//         const { action } = req.body; // 'done' or 'canceled'
+//         const job = await Job.findById(req.params.jobId);
+//         const workerIndex = job.workers.findIndex(w => w.user.toString() === req.params.userId);
+
+//         if (workerIndex === -1) return res.status(404).json({ message: "Worker not found" });
+
+//         if (action === 'done' || action === 'canceled') {
+//             // Update status instead of removing the worker
+//             job.workers[workerIndex].status = action;
+//         } else {
+//             job.workers[workerIndex].status = action; // This covers other status updates
+//         }
+
+//         await job.save();
+
+//         res.status(200).json(job);
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
 
 // Get Jobs Based on Status (Sorted by Latest)
 router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
