@@ -212,29 +212,29 @@ app.post('/api/notifications/request-verification', verifyToken, async (req, res
 });
 
 // Mark a notification as read 
-app.put('/api/notifications/admin/:notificationId/read', verifyToken, async (req, res) => {
-    try {
-        // Ensure the user is an admin
-        const user = await User.findById(req.user.userId);
-        if (!user || user.isAdmin !== 1) {
-            return res.status(403).json({ message: "Access denied. Admins only." });
-        }
+// app.put('/api/notifications/admin/:notificationId/read', verifyToken, async (req, res) => {
+//     try {
+//         // Ensure the user is an admin
+//         const user = await User.findById(req.user.userId);
+//         if (!user || user.isAdmin !== 1) {
+//             return res.status(403).json({ message: "Access denied. Admins only." });
+//         }
 
-        // Find the verification notification by ID
-        const notification = await VerificationNotification.findById(req.params.notificationId);
-        if (!notification) {
-            return res.status(404).json({ message: "Notification not found" });
-        }
+//         // Find the verification notification by ID
+//         const notification = await VerificationNotification.findById(req.params.notificationId);
+//         if (!notification) {
+//             return res.status(404).json({ message: "Notification not found" });
+//         }
 
-        // Mark as read
-        notification.isRead = true;
-        await notification.save();
+//         // Mark as read
+//         notification.isRead = true;
+//         await notification.save();
 
-        res.status(200).json({ message: "Notification marked as read" });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
+//         res.status(200).json({ message: "Notification marked as read" });
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
 
 
         // Mark a user verification notification as approved or denied
