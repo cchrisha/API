@@ -158,21 +158,6 @@
                 walletAddress: user.walletAddress // Include if applicable
             });
 
-            // // Assuming the admin responsible for verification is also a user with isAdmin = true
-            // const adminUser = await User.findOne({ isAdmin: 1 }); // Find the admin (or default admin)
-
-            // if (!adminUser) {
-            //     return res.status(400).json({ message: "Admin for verification not found." });
-            // }
-
-            //  // // Create a verification notification for the admin user
-            // const notification = new VerificationNotification({
-            //     user: adminUser._id, // Reference the admin (who is also a user)
-            //     message: `${user.name} has requested account verification.`, // Custom message
-            //     notificationType: 'verify' // Mark this as a verification notification
-            // });
-            // await notification.save(); 
-
             // Create JWT token with profession
             const token = jwt.sign(
                 { userId: user._id, email: user.email, profession: user.profession }, // Include profession in the token
@@ -211,7 +196,7 @@
                 }
         
                 console.log("Verification request by user:", user.name); // Add this log to track requests.
-        
+                
                 const notification = new VerificationNotification({
                     user: user._id,
                     notificationType: 'verify',
@@ -228,7 +213,7 @@
 // Mark a notification as read 
 app.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
     try {
-        const notificationId = req.params.id;
+        const notificationId = req.params.notificationId; // Correct the parameter name
 
         // Find the notification by ID
         const notification = await VerificationNotification.findById(notificationId);
@@ -245,6 +230,7 @@ app.put('/api/notifications/:notificationId/read', verifyToken, async (req, res)
         res.status(500).json({ message: e.message });
     }
 });
+
 
         // Mark a user verification notification as approved or denied
 app.put('/api/notifications/verify/:notificationId', verifyToken, async (req, res) => {
