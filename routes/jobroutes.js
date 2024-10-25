@@ -387,7 +387,7 @@ router.get('/api/jobs/:jobId/workers', async (req, res) => {
 // });
 
 // Update Applicant Status (Accept or Reject)
-router.put('/api/jobs/:jobId/applicants/:userId', verifyToken, async (req, res) => {
+router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => {
     try {
         const { action } = req.body; // 'accepted' or 'rejected'
         const job = await Job.findById(req.params.jobId).populate('poster', 'name');
