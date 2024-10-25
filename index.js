@@ -196,9 +196,8 @@
                     return res.status(404).json({ message: "User not found." });
                 }
         
-                console.log("Verification request by user:", user.name); // Add this log to track requests.
+                console.log("Verification request by user:", user.name); // Log to track requests.
         
-                // Create and save the notification
                 const notification = new VerificationNotification({
                     user: user._id,
                     notificationType: 'verify',
@@ -207,9 +206,7 @@
                     createdAt: new Date(),
                 });
                 await notification.save();
-        
-                // Return the notification ID along with the success message
-                res.status(201).json({ message: "Verification request sent successfully.", notificationId: notification._id });
+                res.status(201).json({ message: "Verification request sent successfully." });
             } catch (e) {
                 res.status(500).json({ message: e.message });
             }
