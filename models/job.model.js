@@ -27,8 +27,8 @@ const JobSchema = new Schema({
 });
 
 // Add unique compound indexes for requests and workers to ensure a user is only listed once per job
-JobSchema.index({ _id: 1, "requests.user": 1 }, { unique: true });
-JobSchema.index({ _id: 1, "workers.user": 1 }, { unique: true });
+// JobSchema.index({ _id: 1, "requests.user": 1 }, { unique: true });
+// JobSchema.index({ _id: 1, "workers.user": 1 }, { unique: true });
 
 const Job = mongoose.model('Job', JobSchema);
 module.exports = Job;
