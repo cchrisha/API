@@ -188,38 +188,29 @@
             }
         });
 
-// Endpoint to handle user verification request
+// Request user verification
 app.post('/api/notifications/request-verification', verifyToken, async (req, res) => {
     try {
-      const user = await User.findById(req.user.userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found." });
-      }
-  
-      console.log("Verification request received from user:", user.name);
-  
-      // Create the verification notification
-      const notification = new VerificationNotification({
-        user: user._id,
-        notificationType: 'verify',
-        message: `${user.name} has requested verification.`,
-        isRead: false,
-        createdAt: new Date(),
-      });
-  
-      await notification.save();
-  
-      // Return success response with notification ID
-      res.status(201).json({
-        message: "Verification request sent successfully.",
-        notificationId: notification._id,
-      });
-    } catch (error) {
-      console.error("Error in verification request:", error.message);
-      res.status(500).json({ message: "Server error. Please try again later." });
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found." });
+        }
+
+        console.log("Verification request by user:", user.name); // Log to track requests.
+
+        const notification = new VerificationNotification({
+            user: user._id,
+            notificationType: 'verify',
+            message: `${user.name} has requested verification.`,
+            isRead: false,
+            createdAt: new Date(),
+        });
+        await notification.save();
+        res.status(201).json({ message: "Verification request sent successfully." });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
     }
-  });
-  
+});
 
 // Mark a notification as read 
 app.put('/api/notifications/admin/:notificationId/read', verifyToken, async (req, res) => {
