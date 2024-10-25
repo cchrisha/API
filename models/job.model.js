@@ -15,7 +15,7 @@ const JobSchema = new Schema({
     requests: [
         {
             user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-            status: { type: String, enum: ['requested', 'rejected', 'working on', 'done', 'canceled'], default: 'requested' }
+            status: { type: String, enum: ['requested', 'rejected'], default: 'requested' }
         }
     ],
     workers: [
