@@ -353,39 +353,6 @@ router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => 
     }
 });
 
-// router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => {
-//     try {
-//         const { action } = req.body; // 'accept' or 'reject'
-//         const job = await Job.findById(req.params.jobId);
-//         const requestIndex = job.requests.findIndex(r => r.user.toString() === req.params.userId);
-
-//         if (requestIndex === -1) return res.status(404).json({ message: "Request not found" });
-
-//         const request = job.requests[requestIndex];
-
-//         if (action === 'accept') {
-//             // Add user to workers and remove from requests
-//             job.workers.push({ user: request.user, status: 'working on' });
-//             job.requests.splice(requestIndex, 1); // Remove the request from the array
-            
-//             // Update user's job list (assuming User model is imported)
-//             const user = await User.findById(request.user); // Replace with your User model
-//             if (!user.jobs) {
-//                 user.jobs = []; // Initialize jobs array if it doesn't exist
-//             }
-//             user.jobs.push({ job: job._id, status: 'working on' });
-//             await user.save();
-//         } else if (action === 'reject') {
-//             request.status = 'rejected';
-//         }
-//         await job.save();
-
-//         res.status(200).json(job);
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
-
 // Update Worker Status (Mark as Done or Cancelled)
 router.put('/api/jobs/:jobId/workers/:userId', verifyToken, async (req, res) => {
     try {
@@ -414,29 +381,6 @@ router.put('/api/jobs/:jobId/workers/:userId', verifyToken, async (req, res) => 
         res.status(500).json({ message: e.message });
     }
 });
-
-// router.put('/api/jobs/:jobId/workers/:userId', verifyToken, async (req, res) => {
-//     try {
-//         const { action } = req.body; // 'done' or 'canceled'
-//         const job = await Job.findById(req.params.jobId);
-//         const workerIndex = job.workers.findIndex(w => w.user.toString() === req.params.userId);
-
-//         if (workerIndex === -1) return res.status(404).json({ message: "Worker not found" });
-
-//         if (action === 'done' || action === 'canceled') {
-//             // Update status instead of removing the worker
-//             job.workers[workerIndex].status = action;
-//         } else {
-//             job.workers[workerIndex].status = action; // This covers other status updates
-//         }
-
-//         await job.save();
-
-//         res.status(200).json(job);
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
 
 // Get Jobs Based on Status (Sorted by Latest)
 router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
@@ -481,50 +425,6 @@ router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
-
-// router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
-//     try {
-//         console.log('User ID:', req.user.userId);
-//         console.log('Status:', req.params.status);
-
-//         let jobs = [];
-
-//         // Check if status is 'requested', search the requests array
-//         if (req.params.status.toLowerCase() === 'requested') {
-//             jobs = await Job.find({
-//                 requests: {
-//                     $elemMatch: {
-//                         user: req.user.userId,
-//                         status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive
-//                     }
-//                 }
-//             })
-//             .populate('poster', 'name')
-//             .sort({ datePosted: -1 });
-//         } else {
-//             // For 'working on', 'done', or other statuses, search in the workers array
-//             jobs = await Job.find({
-//                 workers: {
-//                     $elemMatch: {
-//                         user: req.user.userId,
-//                         status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive match
-//                     }
-//                 }
-//             })
-//             .populate('poster', 'name')
-//             .sort({ datePosted: -1 });
-//         }
-
-//         if (!jobs || jobs.length === 0) {
-//             return res.status(200).json([]); // Return an empty array if no jobs are found
-//         }
-
-//         res.status(200).json(jobs);
-//     } catch (e) {
-//         console.error('Error fetching jobs:', e.message);
-//         res.status(500).json({ message: e.message });
-//     }
-// });
 
 router.get('/api/jobs/search', async (req, res) => {
     try {
