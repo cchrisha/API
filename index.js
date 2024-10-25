@@ -216,24 +216,21 @@
         
 // Mark a notification as read 
 app.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
+    console.log("Received notificationId:", req.params.notificationId); // Add this log
     try {
-        const notificationId = req.params.notificationId; // Correct the parameter name
-
-        // Find the notification by ID
+        const notificationId = req.params.notificationId;
         const notification = await VerificationNotification.findById(notificationId);
         if (!notification) {
             return res.status(404).json({ message: "Notification not found." });
         }
-
-        // Mark the notification as read
         notification.isRead = true;
         await notification.save();
-
         res.status(200).json({ message: "Notification marked as read." });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+
 
         // Mark a user verification notification as approved or denied
 app.put('/api/notifications/verify/:notificationId', verifyToken, async (req, res) => {
