@@ -459,8 +459,8 @@ router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
             })
             .populate('poster', 'name')
             .sort({ datePosted: -1 });
-        } else if (status === 'done' || status === 'canceled') {
-            // Search in the workers array for 'done' or 'canceled' statuses
+        } else if (status === 'working on' || status === 'done' || status === 'canceled') {
+            // Search in the workers array for 'working on', 'done', or 'canceled' statuses
             jobs = await Job.find({
                 workers: {
                     $elemMatch: {
