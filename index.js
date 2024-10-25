@@ -196,7 +196,8 @@
                 }
         
                 console.log("Verification request by user:", user.name); // Add this log to track requests.
-                
+        
+                // Create and save the notification
                 const notification = new VerificationNotification({
                     user: user._id,
                     notificationType: 'verify',
@@ -205,11 +206,14 @@
                     createdAt: new Date(),
                 });
                 await notification.save();
-                res.status(201).json({ message: "Verification request sent successfully." });
+        
+                // Return the notification ID along with the success message
+                res.status(201).json({ message: "Verification request sent successfully.", notificationId: notification._id });
             } catch (e) {
                 res.status(500).json({ message: e.message });
             }
         });
+        
 // Mark a notification as read 
 app.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
     try {
@@ -230,7 +234,6 @@ app.put('/api/notifications/:notificationId/read', verifyToken, async (req, res)
         res.status(500).json({ message: e.message });
     }
 });
-
 
         // Mark a user verification notification as approved or denied
 app.put('/api/notifications/verify/:notificationId', verifyToken, async (req, res) => {
