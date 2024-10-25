@@ -445,43 +445,86 @@ router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
         console.log('Status:', req.params.status);
 
         let jobs = [];
+        const status = req.params.status.toLowerCase();
 
-        // Check if status is 'requested', search the requests array
-        if (req.params.status.toLowerCase() === 'requested') {
+        if (status === 'requested' || status === 'rejected') {
+            // Search in the requests array for 'requested' or 'rejected' statuses
             jobs = await Job.find({
                 requests: {
                     $elemMatch: {
                         user: req.user.userId,
-                        status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive
+                        status: status // Direct match without regex
+                    }
+                }
+            })
+            .populate('poster', 'name')
+            .sort({ datePosted: -1 });
+        } else if (status === 'done' || status === 'canceled') {
+            // Search in the workers array for 'done' or 'canceled' statuses
+            jobs = await Job.find({
+                workers: {
+                    $elemMatch: {
+                        user: req.user.userId,
+                        status: status // Direct match without regex
                     }
                 }
             })
             .populate('poster', 'name')
             .sort({ datePosted: -1 });
         } else {
-            // For 'working on', 'done', or other statuses, search in the workers array
-            jobs = await Job.find({
-                workers: {
-                    $elemMatch: {
-                        user: req.user.userId,
-                        status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive match
-                    }
-                }
-            })
-            .populate('poster', 'name')
-            .sort({ datePosted: -1 });
+            return res.status(400).json({ message: 'Invalid status parameter' });
         }
 
-        if (!jobs || jobs.length === 0) {
-            return res.status(200).json([]); // Return an empty array if no jobs are found
-        }
-
-        res.status(200).json(jobs);
+        res.status(200).json(jobs.length ? jobs : []); // Return jobs or an empty array if none are found
     } catch (e) {
         console.error('Error fetching jobs:', e.message);
         res.status(500).json({ message: e.message });
     }
 });
+
+// router.get('/api/user/jobs/status/:status', verifyToken, async (req, res) => {
+//     try {
+//         console.log('User ID:', req.user.userId);
+//         console.log('Status:', req.params.status);
+
+//         let jobs = [];
+
+//         // Check if status is 'requested', search the requests array
+//         if (req.params.status.toLowerCase() === 'requested') {
+//             jobs = await Job.find({
+//                 requests: {
+//                     $elemMatch: {
+//                         user: req.user.userId,
+//                         status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive
+//                     }
+//                 }
+//             })
+//             .populate('poster', 'name')
+//             .sort({ datePosted: -1 });
+//         } else {
+//             // For 'working on', 'done', or other statuses, search in the workers array
+//             jobs = await Job.find({
+//                 workers: {
+//                     $elemMatch: {
+//                         user: req.user.userId,
+//                         status: { $regex: new RegExp(`^${req.params.status}$`, 'i') } // Case-insensitive match
+//                     }
+//                 }
+//             })
+//             .populate('poster', 'name')
+//             .sort({ datePosted: -1 });
+//         }
+
+//         if (!jobs || jobs.length === 0) {
+//             return res.status(200).json([]); // Return an empty array if no jobs are found
+//         }
+
+//         res.status(200).json(jobs);
+//     } catch (e) {
+//         console.error('Error fetching jobs:', e.message);
+//         res.status(500).json({ message: e.message });
+//     }
+// });
 
 router.get('/api/jobs/search', async (req, res) => {
     try {
