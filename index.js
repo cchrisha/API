@@ -216,7 +216,7 @@
         });
         
 // Mark a notification as read 
-router.put('/api/notifications/admin/:notificationId/read', verifyToken, async (req, res) => {
+app.put('/api/notifications/admin/:notificationId/read', verifyToken, async (req, res) => {
     try {
         const notification = await VerificationNotification.findById(req.params.notificationId);
 
