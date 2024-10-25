@@ -171,22 +171,21 @@
 
     // // Notification
     // Fetch all verification notifications for admin
-        app.get('/api/notifications/admin', verifyToken, async (req, res) => {
-            try {
-                // Ensure the user is an admin
-                const user = await User.findById(req.user.userId);
-
-                if (!user || user.isAdmin !== 1) {
-                    return res.status(403).json({ message: "Access denied. Admins only." });
-                }
-                const notifications = await VerificationNotification.find({ notificationType: 'verify' })
-                    .sort({ createdAt: -1 });
-                
-                res.status(200).json(notifications);
-            } catch (e) {
-                res.status(500).json({ message: e.message });
+    app.get('/api/notifications/admin', verifyToken, async (req, res) => {
+        try {
+            // Ensure the user is an admin
+            const user = await User.findById(req.user.userId);
+            if (!user || user.isAdmin !== 1) {
+                return res.status(403).json({ message: "Access denied. Admins only." });
             }
-        });
+            const notifications = await VerificationNotification.find({ notificationType: 'verify' })
+                .sort({ createdAt: -1 });
+            
+            res.status(200).json(notifications);
+        } catch (e) {
+            res.status(500).json({ message: e.message });
+        }
+    });
 
 // Request user verification
 app.post('/api/notifications/request-verification', verifyToken, async (req, res) => {
