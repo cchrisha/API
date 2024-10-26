@@ -225,8 +225,7 @@ app.post('/api/verification/request', verifyToken, async (req, res) => {
             user: admin._id, // Set the admin as the recipient
             message: `${req.user.name} has requested verification.`,
             requestedBy: req.user.userId,
-            isRead: false,
-            createdAt: new Date(),// Set the user making the request
+            isRead: false, // Mark as unread by default
         });
         await notification.save(); // Save the notification
 
