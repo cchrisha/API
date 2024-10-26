@@ -283,7 +283,6 @@ app.put('/api/verification/notifications/:notificationId/read', verifyToken, asy
     }
 });
 
-// Toggle user verification status
 app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
     try {
         // Fetch the requesting user from the database
@@ -301,6 +300,14 @@ app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
         // Update verification status
         user.isVerify = req.body.isVerify ? 1 : 0; // 1 for verified, 0 for unverified
         await user.save();
+
+        // Create a notification for the user
+        const notification = new VerificationNotification({
+            user: user._id, // The user being verified
+            message: `Your verification status has been updated to ${user.isVerify ? 'verified' : 'unverified'}.`,
+            isRead: false, // New notification, marked as unread
+        });
+        await notification.save(); // Save the notification
 
         res.status(200).json({ message: `User verification status updated to ${user.isVerify ? 'verified' : 'unverified'}` });
     } catch (e) {
