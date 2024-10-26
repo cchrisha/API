@@ -197,25 +197,24 @@
         }
     });
     
-    // Fetch notifications for the admin
-    app.get('/api/verification/notifications', verifyToken, async (req, res) => {
-        try {
-            // Check if the logged-in user is an admin
-            const user = await User.findById(req.user.userId);
-            if (!user || user.isAdmin !== 1) {
-                return res.status(403).json({ message: "Access denied" });
-            }
-    
-            // Fetch all verification notifications for the admin
-            const notifications = await VerificationNotification.find({ user: user._id })
-                .sort({ createdAt: -1 });
-    
-            res.status(200).json(notifications);
-        } catch (e) {
-            res.status(500).json({ message: e.message });
+ // Adjusted Fetch Notifications for Admin API
+app.get('/api/verification/notifications', verifyToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user || user.isAdmin !== 1) {
+            return res.status(403).json({ message: "Access denied" });
         }
-    });
-    
+
+        const notifications = await VerificationNotification.find({ user: user._id })
+            .populate('user', 'name email profession contact location') // Add necessary fields
+            .sort({ createdAt: -1 });
+
+        res.status(200).json(notifications);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
     // Mark a verification notification as read by the admin
     app.put('/api/verification/notifications/:notificationId/read', verifyToken, async (req, res) => {
         try {
