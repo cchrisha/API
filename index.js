@@ -304,6 +304,7 @@ app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
         // Create a notification for the user
         const notification = new VerificationNotification({
             user: user._id, // The user being verified
+            requestedBy: requester._id, // The admin who requested the verification
             message: `Your verification status has been updated to ${user.isVerify ? 'verified' : 'unverified'}.`,
             isRead: false, // New notification, marked as unread
         });
