@@ -286,7 +286,7 @@ app.put('/api/verification/notifications/:notificationId/read', verifyToken, asy
         });
         
 // Toggle user verification status
-app.put('/api/user/:userId/verify', verifyToken, async (req, res) => {
+app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
     try {
         const user = await User.findById(req.params.userId);
         if (!user) return res.status(404).json({ message: "User not found" });
