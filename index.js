@@ -287,8 +287,8 @@ app.put('/api/verification/notifications/:notificationId/read', verifyToken, asy
 app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
     try {
         // Check if the requesting user is an admin
-        if (!req.user.isAdmin) {
-            return res.status(403).json({ message: "Access denied. You do not have permission to perform this action." });
+        if (!user || user.isAdmin !== 1) {
+            return res.status(403).json({ message: "Access denied" });
         }
 
         const user = await User.findById(req.params.userId);
