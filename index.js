@@ -202,7 +202,7 @@
 app.post('/api/verification/request', verifyToken, async (req, res) => {
     try {
         const admin = await User.findOne({ isAdmin: 1 }); // Fetch the admin
-        if (!admin) return res.status(404).json({ message: "Admin not found" });
+         if (!admin) return res.status(404).json({ message: "Admin not found" });
 
         // Check if the user has already sent a verification request
         const existingRequest = await VerificationNotification.findOne({
