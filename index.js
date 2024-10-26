@@ -169,6 +169,34 @@
         }
     });
 
+// // Post a verification request to the admin
+// app.post('/api/verification/request', verifyToken, async (req, res) => {
+//     try {
+//         const admin = await User.findOne({ isAdmin: 1 }); // Fetch the admin
+//         if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+//         // Check if the user has already sent a verification request
+//         const existingRequest = await VerificationNotification.findOne({
+//             user: req.user.userId,
+//             message: "Verification request pending"
+//         });
+//         if (existingRequest) {
+//             return res.status(400).json({ message: "Verification request already submitted" });
+//         }
+
+//         // Create a new verification notification for the admin
+//         const notification = new VerificationNotification({
+//             user: admin._id, // Set the admin as the recipient
+//             message: `${req.user.name} has requested verification.`
+//         });
+//         await notification.save(); // Save the notification
+
+//         res.status(200).json({ message: "Verification request submitted to admin" });
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
 // Post a verification request to the admin
 app.post('/api/verification/request', verifyToken, async (req, res) => {
     try {
@@ -177,7 +205,7 @@ app.post('/api/verification/request', verifyToken, async (req, res) => {
 
         // Check if the user has already sent a verification request
         const existingRequest = await VerificationNotification.findOne({
-            user: req.user.userId,
+            requestedBy: req.user.userId,
             message: "Verification request pending"
         });
         if (existingRequest) {
@@ -187,7 +215,8 @@ app.post('/api/verification/request', verifyToken, async (req, res) => {
         // Create a new verification notification for the admin
         const notification = new VerificationNotification({
             user: admin._id, // Set the admin as the recipient
-            message: `${req.user.name} has requested verification.`
+            message: `${req.user.name} has requested verification.`,
+            requestedBy: req.user.userId // Set the user making the request
         });
         await notification.save(); // Save the notification
 
@@ -196,6 +225,7 @@ app.post('/api/verification/request', verifyToken, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
 
 // Fetch notifications for the admin
 app.get('/api/verification/notifications', verifyToken, async (req, res) => {
