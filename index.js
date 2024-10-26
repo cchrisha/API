@@ -282,6 +282,22 @@ app.put('/api/verification/notifications/:notificationId/read', verifyToken, asy
         res.status(500).json({ message: e.message });
     }
 });
+
+// Toggle user verification status
+app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        user.isVerify = req.body.isVerify ? 1 : 0; // 1 for verified, 0 for unverified
+        await user.save();
+
+        res.status(200).json({ message: `User verification status updated to ${user.isVerify ? 'verified' : 'unverified'}` });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+       
         // Get All Users
         app.get('/api/users', async (req, res) => {
             try {
@@ -333,23 +349,7 @@ app.put('/api/verification/notifications/:notificationId/read', verifyToken, asy
                 });
             }
         });
-        
-// Toggle user verification status
-app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.params.userId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        user.isVerify = req.body.isVerify ? 1 : 0; // 1 for verified, 0 for unverified
-        await user.save();
-
-        res.status(200).json({ message: `User verification status updated to ${user.isVerify ? 'verified' : 'unverified'}` });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-        
-
+         
         app.post('/api/adminLogin', async (req, res) => {
             const { email, password } = req.body;
         
