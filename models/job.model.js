@@ -15,7 +15,7 @@ const JobSchema = new Schema({
     requests: [
         {
             user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-            status: { type: String, enum: ['requested', 'rejected', 'working on', 'done', 'canceled'], default: 'requested' }
+            status: { type: String, enum: ['requested', 'rejected'], default: 'requested' }
         }
     ],
     workers: [
@@ -25,6 +25,10 @@ const JobSchema = new Schema({
         }
     ]
 });
+
+// Add unique compound indexes for requests and workers to ensure a user is only listed once per job
+// JobSchema.index({ _id: 1, "requests.user": 1 }, { unique: true });
+// JobSchema.index({ _id: 1, "workers.user": 1 }, { unique: true });
 
 const Job = mongoose.model('Job', JobSchema);
 module.exports = Job;
