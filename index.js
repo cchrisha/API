@@ -177,17 +177,16 @@ app.post('/api/verification/request', verifyToken, async (req, res) => {
 
         // Check if the user has already sent a verification request
         const existingRequest = await VerificationNotification.findOne({
-            requester: req.user.userId,
+            user: req.user.userId,
             message: "Verification request pending"
         });
         if (existingRequest) {
             return res.status(400).json({ message: "Verification request already submitted" });
         }
 
-        // Create a new verification notification for the admin with requester details
+        // Create a new verification notification for the admin
         const notification = new VerificationNotification({
             user: admin._id, // Set the admin as the recipient
-            requester: req.user.userId, // The user making the request
             message: `${req.user.name} has requested verification.`
         });
         await notification.save(); // Save the notification
@@ -198,28 +197,24 @@ app.post('/api/verification/request', verifyToken, async (req, res) => {
     }
 });
 
+    // Fetch notifications for the admin
+    app.get('/api/verification/notifications', verifyToken, async (req, res) => {
+        try {
+            // Check if the logged-in user is an admin
+            const user = await User.findById(req.user.userId);
+            if (!user || user.isAdmin !== 1) {
+                return res.status(403).json({ message: "Access denied" });
+            }
     
-// Fetch notifications for the admin
-app.get('/api/verification/notifications', verifyToken, async (req, res) => {
-    try {
-        // Check if the logged-in user is an admin
-        const user = await User.findById(req.user.userId);
-        if (!user || user.isAdmin !== 1) {
-            return res.status(403).json({ message: "Access denied" });
+            // Fetch all verification notifications for the admin
+            const notifications = await VerificationNotification.find({ user: user._id })
+                .sort({ createdAt: -1 });
+    
+            res.status(200).json(notifications);
+        } catch (e) {
+            res.status(500).json({ message: e.message });
         }
-
-        // Fetch all verification notifications for the admin, populating requester details
-        const notifications = await VerificationNotification.find({ user: user._id })
-            .populate('requester', 'name email profession contact location') // Populate requester details
-            .sort({ createdAt: -1 });
-
-        res.status(200).json(notifications);
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-
+    });
 
     // Mark a verification notification as read by the admin
     app.put('/api/verification/notifications/:notificationId/read', verifyToken, async (req, res) => {
@@ -238,8 +233,6 @@ app.get('/api/verification/notifications', verifyToken, async (req, res) => {
             res.status(500).json({ message: e.message });
         }
     });
-    
-
         // Get All Users
         app.get('/api/users', async (req, res) => {
             try {
