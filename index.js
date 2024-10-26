@@ -285,31 +285,20 @@ app.put('/api/verification/notifications/:notificationId/read', verifyToken, asy
             }
         });
         
-        app.get('/api/isUserVerify', async (req, res) => {
-            try {
-                const { verified } = req.query; // Get query parameter
-        
-                // Construct filter based on query parameter
-                const filter = verified === 'true' ? { isVerify: 1 } : {}; // Only get verified users if the query is set
-        
-                // Fetch users based on the filter
-                const users = await User.find(filter);
-        
-                // Transform the user data
-                const transformedUsers = users.map(user => ({
-                    id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    isVerified: user.isVerify === 1,
-                }));
-        
-                // Return the list of users with verification status
-                res.status(200).json(transformedUsers);
-            } catch (e) {
-                // Handle any errors
-                res.status(500).json({ message: e.message });
-            }
-        });
+// Toggle user verification status
+app.put('/api/user/:userId/verify', verifyToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        user.isVerify = req.body.isVerify ? 1 : 0; // 1 for verified, 0 for unverified
+        await user.save();
+
+        res.status(200).json({ message: `User verification status updated to ${user.isVerify ? 'verified' : 'unverified'}` });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
         
 
         app.post('/api/adminLogin', async (req, res) => {
