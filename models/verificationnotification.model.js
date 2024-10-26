@@ -21,3 +21,4 @@ const VerificationNotificationSchema = new mongoose.Schema({
 });
 
 const VerificationNotification = mongoose.model('VerificationNotification', VerificationNotificationSchema);
+module.exports = {VerificationNotification};
