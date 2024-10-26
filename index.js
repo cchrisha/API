@@ -208,6 +208,7 @@ app.post('/api/verification/request', verifyToken, async (req, res) => {
     
             // Fetch all verification notifications for the admin
             const notifications = await VerificationNotification.find({ user: user._id })
+                .populate('user', 'name email contact profession location')
                 .sort({ createdAt: -1 });
     
             res.status(200).json(notifications);
