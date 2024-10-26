@@ -200,6 +200,14 @@
 // Post a verification request to the admin
 app.post('/api/verification/request', verifyToken, async (req, res) => {
     try {
+        const user = await User.findById(req.user.userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
+
+        // Check if the user is already verified
+        if (user.isVerified) {
+            return res.status(400).json({ message: "User is already verified" });
+        }
+
         const admin = await User.findOne({ isAdmin: 1 }); // Fetch the admin
         if (!admin) return res.status(404).json({ message: "Admin not found" });
 
@@ -225,7 +233,6 @@ app.post('/api/verification/request', verifyToken, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
-
 
 // Fetch notifications for the admin
 app.get('/api/verification/notifications', verifyToken, async (req, res) => {
