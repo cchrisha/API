@@ -200,16 +200,25 @@
 // Post a verification request to the admin
 app.post('/api/verification/request', verifyToken, async (req, res) => {
     try {
+        // Fetch the user
         const user = await User.findById(req.user.userId);
-        if (!user) return res.status(404).json({ message: "User not found" });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
-        // Check if the user is already verified
-        if (user.isVerified) {
+        // Debug: Check the value of user.isVerified
+        console.log(`User verification status: ${user.isVerified}`);
+
+        // Ensure that isVerified field is Boolean and check if the user is already verified
+        if (user.isVerify === 1) {
             return res.status(400).json({ message: "User is already verified" });
         }
 
-        const admin = await User.findOne({ isAdmin: 1 }); // Fetch the admin
-        if (!admin) return res.status(404).json({ message: "Admin not found" });
+        // Fetch the admin
+        const admin = await User.findOne({ isAdmin: 1 });
+        if (!admin) {
+            return res.status(404).json({ message: "Admin not found" });
+        }
 
         // Check if the user has already sent a verification request
         const existingRequest = await VerificationNotification.findOne({
@@ -231,9 +240,11 @@ app.post('/api/verification/request', verifyToken, async (req, res) => {
 
         res.status(200).json({ message: "Verification request submitted to admin" });
     } catch (e) {
+        console.error("Error submitting verification request:", e);
         res.status(500).json({ message: e.message });
     }
 });
+
 
 // Fetch notifications for the admin
 app.get('/api/verification/notifications', verifyToken, async (req, res) => {
