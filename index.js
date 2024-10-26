@@ -172,12 +172,12 @@
     // Post a verification request to the admin
     app.post('/api/verification/request', verifyToken, async (req, res) => {
         try {
-            const admin = await User.findOne({ isAdmin: 1 }); // Fetch the admin
+            const admin = await User.findOne({ isAdmin: 1 });
             if (!admin) return res.status(404).json({ message: "Admin not found" });
     
             // Check if the user has already sent a verification request
             const existingRequest = await VerificationNotification.findOne({
-                user: req.user.userId,
+                requestedBy: req.user.userId,
                 message: "Verification request pending"
             });
             if (existingRequest) {
@@ -186,10 +186,11 @@
     
             // Create a new verification notification for the admin
             const notification = new VerificationNotification({
-                user: admin._id, // Set the admin as the recipient
+                user: admin._id, // Admin who will receive the notification
+                requestedBy: req.user.userId, // User who is requesting verification
                 message: `${req.user.name} has requested verification.`
             });
-            await notification.save(); // Save the notification
+            await notification.save();
     
             res.status(200).json({ message: "Verification request submitted to admin" });
         } catch (e) {
@@ -197,16 +198,18 @@
         }
     });
     
+    
  // Adjusted Fetch Notifications for Admin API
-app.get('/api/verification/notifications', verifyToken, async (req, res) => {
+ app.get('/api/verification/notifications', verifyToken, async (req, res) => {
     try {
         const user = await User.findById(req.user.userId);
         if (!user || user.isAdmin !== 1) {
             return res.status(403).json({ message: "Access denied" });
         }
 
+        // Fetch notifications and populate requestedBy field
         const notifications = await VerificationNotification.find({ user: user._id })
-            .populate('user', 'name email profession contact location') // Add necessary fields
+            .populate('requestedBy', 'name email profession contact location') // Include relevant fields from the requester
             .sort({ createdAt: -1 });
 
         res.status(200).json(notifications);
@@ -214,6 +217,7 @@ app.get('/api/verification/notifications', verifyToken, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
 
     // Mark a verification notification as read by the admin
     app.put('/api/verification/notifications/:notificationId/read', verifyToken, async (req, res) => {
