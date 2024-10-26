@@ -286,9 +286,15 @@ app.put('/api/verification/notifications/:notificationId/read', verifyToken, asy
 // Toggle user verification status
 app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
     try {
+        // Check if the requesting user is an admin
+        if (!req.user.isAdmin) {
+            return res.status(403).json({ message: "Access denied. You do not have permission to perform this action." });
+        }
+
         const user = await User.findById(req.params.userId);
         if (!user) return res.status(404).json({ message: "User not found" });
 
+        // Update verification status
         user.isVerify = req.body.isVerify ? 1 : 0; // 1 for verified, 0 for unverified
         await user.save();
 
