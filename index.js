@@ -177,7 +177,7 @@
 
 //         // Check if the user has already sent a verification request
 //         const existingRequest = await VerificationNotification.findOne({
-//             requestedBy: req.user.userId,
+//             user: req.user.userId,
 //             message: "Verification request pending"
 //         });
 //         if (existingRequest) {
@@ -187,8 +187,7 @@
 //         // Create a new verification notification for the admin
 //         const notification = new VerificationNotification({
 //             user: admin._id, // Set the admin as the recipient
-//             message: `${req.user.name} has requested verification.`,
-//             requestedBy: req.user.userId // Save the user who made the request
+//             message: `${req.user.name} has requested verification.`
 //         });
 //         await notification.save(); // Save the notification
 
@@ -202,7 +201,7 @@
 app.post('/api/verification/request', verifyToken, async (req, res) => {
     try {
         const admin = await User.findOne({ isAdmin: 1 }); // Fetch the admin
-         if (!admin) return res.status(404).json({ message: "Admin not found" });
+        if (!admin) return res.status(404).json({ message: "Admin not found" });
 
         // Check if the user has already sent a verification request
         const existingRequest = await VerificationNotification.findOne({
