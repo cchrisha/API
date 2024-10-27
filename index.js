@@ -560,26 +560,26 @@ app.get('/api/user/notifications', verifyToken, async (req, res) => {
     }
 });
 
-// // Mark a verification notification as read by the user
-// app.put('/api/user/notifications/:notificationId/read', verifyToken, async (req, res) => {
-//     try {
-//         // Find the notification by ID
-//         const notification = await VerificationNotification.findById(req.params.notificationId);
+// Mark a verification notification as read by the user
+app.put('/api/user/notifications/:notificationId/read', verifyToken, async (req, res) => {
+    try {
+        // Find the notification by ID
+        const notification = await VerificationNotification.findById(req.params.notificationId);
         
-//         // Check if the notification exists and if the logged-in user is the requester
-//         if (!notification || notification.requestedBy.toString() !== req.user.userId) {
-//             return res.status(404).json({ message: "Notification not found or you don't have permission to mark it as read" });
-//         }
+        // Check if the notification exists and if the logged-in user is the requester
+        if (!notification || notification.requestedBy.toString() !== req.user.userId) {
+            return res.status(404).json({ message: "Notification not found or you don't have permission to mark it as read" });
+        }
 
-//         // Mark the notification as read
-//         notification.isRead = true;
-//         await notification.save();
+        // Mark the notification as read
+        notification.isRead = true;
+        await notification.save();
 
-//         res.status(200).json({ message: "Notification marked as read" });
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
+        res.status(200).json({ message: "Notification marked as read" });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
 
 // User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
