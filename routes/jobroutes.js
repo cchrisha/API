@@ -103,15 +103,49 @@ router.get('/api/jobs/profession', verifyToken, async (req, res) => {
     try {
         console.log(req.user); // Print user profession
 
-        const profession = req.user.profession ? req.user.profession.toLowerCase() : ''; // Ensure profession is in lowercase
+        const profession = req.user.profession ? req.user.profession : ''; // Get user profession without lowercasing
         console.log('User Profession:', profession); // Debugging log
 
         const jobs = await Job.find({ 
-            professions: { $elemMatch: { $eq: profession } } // Exact match on profession
+            professions: { $elemMatch: { $regex: new RegExp(`^${profession}$`, 'i') } } // Case-insensitive match
         })
             .sort({ datePosted: -1 }) // Sort from latest to oldest
             .limit(10)
             .populate('poster', 'name');
+        
+        res.status(200).json(jobs);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// router.get('/api/jobs/profession', verifyToken, async (req, res) => {
+//     try {
+//         console.log(req.user); // Print user profession
+
+//         const profession = req.user.profession ? req.user.profession.toLowerCase() : ''; // Ensure profession is in lowercase
+//         console.log('User Profession:', profession); // Debugging log
+
+//         const jobs = await Job.find({ 
+//             professions: { $elemMatch: { $eq: profession } } // Exact match on profession
+//         })
+//             .sort({ datePosted: -1 }) // Sort from latest to oldest
+//             .limit(10)
+//             .populate('poster', 'name');
+//         res.status(200).json(jobs);
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
+
+// Get Most Recent Jobs (Limit 10)
+router.get('/api/jobs/recent', async (req, res) => {
+    try {
+        const jobs = await Job.find({})
+            .sort({ datePosted: -1 }) // Sort from latest to oldest
+            .limit(10)
+            .populate('poster', 'name');
+        
         res.status(200).json(jobs);
     } catch (e) {
         res.status(500).json({ message: e.message });
@@ -119,19 +153,19 @@ router.get('/api/jobs/profession', verifyToken, async (req, res) => {
 });
 
 // Get Most Recent Jobs (Posted in the Last Week)
-router.get('/api/jobs/recent', async (req, res) => {
-    try {
-        const oneWeekAgo = new Date();
-        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        const jobs = await Job.find({ datePosted: { $gte: oneWeekAgo } })
-            .sort({ datePosted: -1 }) // Sort from latest to oldest
-            .limit(10)
-            .populate('poster', 'name');
-        res.status(200).json(jobs);
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
+// router.get('/api/jobs/recent', async (req, res) => {
+//     try {
+//         const oneWeekAgo = new Date();
+//         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+//         const jobs = await Job.find({ datePosted: { $gte: oneWeekAgo } })
+//             .sort({ datePosted: -1 }) // Sort from latest to oldest
+//             .limit(10)
+//             .populate('poster', 'name');
+//         res.status(200).json(jobs);
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
 
 //get user jobs all
 router.get('/api/user/:userId/jobs/all', async (req, res) => {
