@@ -24,7 +24,7 @@ const { Notification, TransactionNotification } = require('../models/notificatio
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
         // Check if the user is verified (isVerify should not be 0)
-        if (req.user.isVerify === 0) {
+        if (req.user.isVerify == 0) {
             return res.status(403).json({ message: "You must be verified to post a job" });
         }
 
