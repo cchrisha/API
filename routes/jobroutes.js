@@ -23,8 +23,6 @@ const { Notification, TransactionNotification } = require('../models/notificatio
 //try verify --chrisha
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
-        console.log("Entering job post route"); // Log entering the route
-        console.log("User object:", req.user); // Log the user object
 
         const user = await User.findById(req.user.userId);
         if (!user) {
