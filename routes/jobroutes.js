@@ -23,8 +23,10 @@ const { Notification, TransactionNotification } = require('../models/notificatio
 //try verify --chrisha
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
+        console.log("User verification status:", req.user.isVerify); // Log the verification status
+
         // Check if the user is verified (isVerify should not be 0)
-        if (req.user.isVerify == 0) {
+        if (req.user.isVerify === 0) {
             return res.status(403).json({ message: "You must be verified to post a job" });
         }
 
@@ -47,7 +49,6 @@ router.post('/api/jobs', verifyToken, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
-
 
 //Edit job
 router.put('/api/jobs/:jobId', verifyToken, async (req, res) => {
