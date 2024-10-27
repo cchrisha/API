@@ -28,10 +28,6 @@ const UserSchema = mongoose.Schema(
             type: String,
             required: [true, "Please enter your profession"], 
         },
-        // profession: [{
-        //     type: String,
-        //     required: [true, "Please enter your profession"], 
-        // }],
         walletAddress: {
             type: String,
             unique: true,

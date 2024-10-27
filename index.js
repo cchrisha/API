@@ -285,7 +285,7 @@ app.get('/api/userGetTransac', verifyToken, async (req, res) => {
     }
 });
     
-// Get User Profile
+// Get User Profile Legit
 app.get('/api/user', verifyToken, async (req, res) => {
     try {
         // Fetch the user based on the ID decoded from the token
@@ -294,7 +294,7 @@ app.get('/api/user', verifyToken, async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Return user profile information
+        // Return user profile information including verification status
         res.status(200).json({
             userId: user._id,
             name: user.name,
@@ -303,12 +303,14 @@ app.get('/api/user', verifyToken, async (req, res) => {
             contact: user.contact,
             profession: user.profession,
             profilePicture: user.profilePicture,
-            walletAddress: user.walletAddress // Include if applicable
+            walletAddress: user.walletAddress, // Include if applicable
+            isVerify: user.isVerify // Include the verification status
         });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+
     
 async function fetchTransactions(walletAddress) {
     const etherscanApiKey = '5KEE4GXQSGWAFCJ6CWBJPMQ5BV3VQ33IX1';
