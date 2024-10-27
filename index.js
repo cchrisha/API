@@ -540,24 +540,24 @@ try {
     }
 });
 
-// // Fetch notifications for a user
-// app.get('/api/user/notifications', verifyToken, async (req, res) => {
-//     try {
-//         // Fetch the logged-in user from the database
-//         const user = await User.findById(req.user.userId);
-//         if (!user) {
-//             return res.status(404).json({ message: "User not found" });
-//         }
+// Fetch notifications for a user
+app.get('/api/user/notifications', verifyToken, async (req, res) => {
+    try {
+        // Fetch the logged-in user from the database
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
-//         // Fetch all verification notifications where the logged-in user is the requester
-//         const notifications = await VerificationNotification.find({ requestedBy: user._id }) // Fetch notifications for this user
-//             .sort({ createdAt: -1 }) // Sort notifications by creation date in descending order
+        // Fetch all verification notifications where the logged-in user is the requester
+        const notifications = await VerificationNotification.find({ requestedBy: user._id }) // Fetch notifications for this user
+            .sort({ createdAt: -1 }) // Sort notifications by creation date in descending order
 
-//         res.status(200).json(notifications);
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
+        res.status(200).json(notifications);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
 
 // // Mark a verification notification as read by the user
 // app.put('/api/user/notifications/:notificationId/read', verifyToken, async (req, res) => {
