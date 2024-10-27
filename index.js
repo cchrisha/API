@@ -566,8 +566,8 @@ app.put('/api/user/notifications/:notificationId/read', verifyToken, async (req,
         // Find the notification by ID
         const notification = await VerificationNotification.findById(req.params.notificationId);
         
-        // Check if the notification exists and if the logged-in user is the requester
-        if (!notification || notification.requestedBy.toString() !== req.user.userId) {
+        // Check if the notification exists and if the logged-in user is the recipient
+        if (!notification || notification.user.toString() !== req.user.userId) {
             return res.status(404).json({ message: "Notification not found or you don't have permission to mark it as read" });
         }
 
