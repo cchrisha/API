@@ -138,39 +138,40 @@ app.put('/api/verification/notifications/:notificationId/read', verifyToken, asy
     }
 });
     
-//Verify user in admin
+// Verify user in admin
 app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
-try {
-    // Fetch the requesting user from the database
-    const requester = await User.findById(req.user.userId);
+    try {
+        // Fetch the requesting user from the database
+        const requester = await User.findById(req.user.userId);
 
-    // Check if the requesting user is an admin
-    if (!requester || requester.isAdmin !== 1) {
-        return res.status(403).json({ message: "Access denied. You do not have permission to perform this action." });
-    }
+        // Check if the requesting user is an admin
+        if (!requester || requester.isAdmin !== 1) {
+            return res.status(403).json({ message: "Access denied. You do not have permission to perform this action." });
+        }
 
-    // Fetch the user to be verified
-    const user = await User.findById(req.params.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
+        // Fetch the user to be verified
+        const user = await User.findById(req.params.userId);
+        if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Update verification status
-    user.isVerify = req.body.isVerify ? 1 : 0; // 1 for verified, 0 for unverified
-    await user.save();
+        // Update verification status
+        user.isVerify = req.body.isVerify ? 1 : 0; // 1 for verified, 0 for unverified
+        await user.save();
 
-    // Create a notification for the user
-    const notification = new VerificationNotification({
-        user: user._id, // The user being verified
-        requestedBy: requester._id, // The admin who requested the verification
-        message: `Your verification status has been updated to ${user.isVerify ? 'verified' : 'unverified'}.`,
-        isRead: false, // New notification, marked as unread
-    });
-    await notification.save(); // Save the notification
+        // Create a notification for the user
+        const notification = new VerificationNotification({
+            user: user._id, // The user being verified
+            requestedBy: requester._id, // The admin who requested the verification
+            message: `Your verification status has been updated to ${user.isVerify ? 'verified' : 'unverified'}.`,
+            isRead: false, // New notification, marked as unread
+        });
+        await notification.save(); // Save the notification
 
-    res.status(200).json({ message: `User verification status updated to ${user.isVerify ? 'verified' : 'unverified'}` });
+        res.status(200).json({ message: `User verification status updated to ${user.isVerify ? 'verified' : 'unverified'}` });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+
         
 // Get All Users
 app.get('/api/users', async (req, res) => {
@@ -549,9 +550,9 @@ app.get('/api/user/notifications', verifyToken, async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        // Fetch all verification notifications where the logged-in user is the requester
-        const notifications = await VerificationNotification.find({ requestedBy: user._id }) // Fetch notifications for this user
-            .sort({ createdAt: -1 }) // Sort notifications by creation date in descending order
+        // Fetch all verification notifications where the logged-in user is the recipient
+        const notifications = await VerificationNotification.find({ user: user._id }) // Fetch notifications for this user
+            .sort({ createdAt: -1 }); // Sort notifications by creation date in descending order
 
         res.status(200).json(notifications);
     } catch (e) {
