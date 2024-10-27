@@ -87,9 +87,9 @@ router.delete('/api/jobs/:jobId', verifyToken, async (req, res) => {
         }
 
         // Ensure that the job can only be deleted by the user who posted it
-        if (job.poster.toString() !== req.user.userId) {
-            return res.status(403).json({ message: "You are not authorized to delete this job" });
-        }
+        // if (job.poster.toString() !== req.user.userId) {
+        //     return res.status(403).json({ message: "You are not authorized to delete this job" });
+        // }
 
         await job.deleteOne();  // Use deleteOne instead of remove
         res.status(200).json({ message: "Job deleted successfully" });
