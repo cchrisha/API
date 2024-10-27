@@ -471,7 +471,7 @@ router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => 
             // Create notification for the applicant
             const notification = new Notification({
                 user: request.user, // The applicant
-                message: `Job poster ${job.poster.name} has accepted your application for the job: ${job.title}`,
+                message: `Job poster ${job.poster.name} accepted your application for the job: ${job.title}`,
                 job: job._id
             });
             await notification.save();
@@ -481,7 +481,7 @@ router.put('/api/jobs/:jobId/request/:userId', verifyToken, async (req, res) => 
             // Create notification for the applicant
             const notification = new Notification({
                 user: request.user, // The applicant
-                message: `Job poster ${job.poster.name} has rejected your application for the job: ${job.title}`,
+                message: `Job poster ${job.poster.name} rejected your application for the job: ${job.title}`,
                 job: job._id
             });
             await notification.save();
