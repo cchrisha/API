@@ -8,51 +8,51 @@ const { Parser } = require('json2csv');
 const User = require('../models/user.model.js');  // Adjust the path if necessary
 const { Notification, TransactionNotification } = require('../models/notification.model');
 // Post a Job
-// router.post('/api/jobs', verifyToken, async (req, res) => {
-//     try {
-//         const { title, wageRange, isCrypto, location, professions, categories, description } = req.body;
-//         const job = await Job.create({
-//             title, wageRange, isCrypto, location, professions, categories,description, poster: req.user.userId
-//         });
-//         res.status(201).json(job);
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
-
-//try verify --chrisha
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
-
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        if (user.isVerify === 0) {
-            return res.status(400).json({ message: "You must be verified to post a job" });
-        }
         const { title, wageRange, isCrypto, location, professions, categories, description } = req.body;
-
-        // Create the job
         const job = await Job.create({
-            title,
-            wageRange,
-            isCrypto,
-            location,
-            professions,
-            categories,
-            description,
-            poster: req.user.userId
+            title, wageRange, isCrypto, location, professions, categories,description, poster: req.user.userId
         });
-
-        console.log("Job created successfully:", job); // Log the created job
         res.status(201).json(job);
     } catch (e) {
-        console.error("Error creating job:", e); // Log the error
         res.status(500).json({ message: e.message });
     }
 });
+
+//try verify --chrisha(huwag po burahin)
+// router.post('/api/jobs', verifyToken, async (req, res) => {
+//     try {
+
+//         const user = await User.findById(req.user.userId);
+//         if (!user) {
+//             return res.status(404).json({ message: "User not found" });
+//         }
+
+//         if (user.isVerify === 0) {
+//             return res.status(400).json({ message: "You must be verified to post a job" });
+//         }
+//         const { title, wageRange, isCrypto, location, professions, categories, description } = req.body;
+
+//         // Create the job
+//         const job = await Job.create({
+//             title,
+//             wageRange,
+//             isCrypto,
+//             location,
+//             professions,
+//             categories,
+//             description,
+//             poster: req.user.userId
+//         });
+
+//         console.log("Job created successfully:", job); // Log the created job
+//         res.status(201).json(job);
+//     } catch (e) {
+//         console.error("Error creating job:", e); // Log the error
+//         res.status(500).json({ message: e.message });
+//     }
+// });
 
 
 //Edit job
@@ -210,57 +210,18 @@ router.get('/api/alljobs', async (req, res) => {
 // });
 
 // Post job request Legit
-// router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
-//     try {
-//         const job = await Job.findById(req.params.jobId);
-//         if (!job) return res.status(404).json({ message: "Job not found" });
-
-//         // Prevent user from applying to their own job
-//         if (job.poster.toString() === req.user.userId) {
-//             return res.status(400).json({ message: "You cannot apply to your own job post" });
-//         }
-
-//         // Check if user has already applied
-//         const existingRequest = job.requests.find(req => req.user.toString() === req.user.userId);
-//         if (existingRequest) return res.status(400).json({ message: "You have already requested this job" });
-
-//         // Add the user's request to the job
-//         job.requests.push({ user: req.user.userId, status: 'requested' });
-//         await job.save();
-
-//         // Create a notification for the job poster
-//         const notification = new Notification({
-//             user: job.poster, // The job poster
-//             message: `${req.user.name} has applied to your job post: ${job.title}`, // Custom message
-//             job: job._id
-//         });
-//         await notification.save(); // Save notification
-
-//         res.status(200).json({ message: "Job request submitted" });
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
-
-
-//tryy uli verify --chrisha
 router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
     try {
         const job = await Job.findById(req.params.jobId);
         if (!job) return res.status(404).json({ message: "Job not found" });
-
-        // Check if the user is verified (isVerify should not be 0)
-        if (req.user.isVerify === 0) {
-            return res.status(403).json({ message: "You must be verified to apply for this job" });
-        }
 
         // Prevent user from applying to their own job
         if (job.poster.toString() === req.user.userId) {
             return res.status(400).json({ message: "You cannot apply to your own job post" });
         }
 
-        // Check if the user has already applied
-        const existingRequest = job.requests.find(request => request.user.toString() === req.user.userId);
+        // Check if user has already applied
+        const existingRequest = job.requests.find(req => req.user.toString() === req.user.userId);
         if (existingRequest) return res.status(400).json({ message: "You have already requested this job" });
 
         // Add the user's request to the job
@@ -280,6 +241,45 @@ router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
+
+//tryy uli verify --chrisha(huwag po burahin)
+// router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
+//     try {
+//         const job = await Job.findById(req.params.jobId);
+//         if (!job) return res.status(404).json({ message: "Job not found" });
+
+//         // Check if the user is verified (isVerify should not be 0)
+//         if (req.user.isVerify === 0) {
+//             return res.status(403).json({ message: "You must be verified to apply for this job" });
+//         }
+
+//         // Prevent user from applying to their own job
+//         if (job.poster.toString() === req.user.userId) {
+//             return res.status(400).json({ message: "You cannot apply to your own job post" });
+//         }
+
+//         // Check if the user has already applied
+//         const existingRequest = job.requests.find(request => request.user.toString() === req.user.userId);
+//         if (existingRequest) return res.status(400).json({ message: "You have already requested this job" });
+
+//         // Add the user's request to the job
+//         job.requests.push({ user: req.user.userId, status: 'requested' });
+//         await job.save();
+
+//         // Create a notification for the job poster
+//         const notification = new Notification({
+//             user: job.poster, // The job poster
+//             message: `${req.user.name} has applied to your job post: ${job.title}`, // Custom message
+//             job: job._id
+//         });
+//         await notification.save(); // Save notification
+
+//         res.status(200).json({ message: "Job request submitted" });
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
 
 
 //di nagamit
