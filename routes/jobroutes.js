@@ -255,8 +255,10 @@ router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
         }
 
         // Check if user has already applied
-        const existingRequest = job.requests.find(req => req.user.toString() === req.user.userId);
-        if (existingRequest) return res.status(400).json({ message: "You have already requested this job" });
+        const alreadyApplied = job.requests.some(req => req.user.toString() === req.user.userId);
+        if (alreadyApplied) {
+            return res.status(400).json({ message: "You have already requested this job" });
+        }
 
         // Add the user's request to the job
         job.requests.push({ user: req.user.userId, status: 'requested' });
@@ -264,17 +266,49 @@ router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
 
         // Create a notification for the job poster
         const notification = new Notification({
-            user: job.poster, // The job poster
-            message: `${req.user.name} has applied to your job post: ${job.title}`, // Custom message
+            user: job.poster,
+            message: `${req.user.name} has applied to your job post: ${job.title}`,
             job: job._id
         });
-        await notification.save(); // Save notification
+        await notification.save();
 
         res.status(200).json({ message: "Job request submitted" });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+
+// router.post('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
+//     try {
+//         const job = await Job.findById(req.params.jobId);
+//         if (!job) return res.status(404).json({ message: "Job not found" });
+
+//         // Prevent user from applying to their own job
+//         if (job.poster.toString() === req.user.userId) {
+//             return res.status(400).json({ message: "You cannot apply to your own job post" });
+//         }
+
+//         // Check if user has already applied
+//         const existingRequest = job.requests.find(req => req.user.toString() === req.user.userId);
+//         if (existingRequest) return res.status(400).json({ message: "You have already requested this job" });
+
+//         // Add the user's request to the job
+//         job.requests.push({ user: req.user.userId, status: 'requested' });
+//         await job.save();
+
+//         // Create a notification for the job poster
+//         const notification = new Notification({
+//             user: job.poster, // The job poster
+//             message: `${req.user.name} has applied to your job post: ${job.title}`, // Custom message
+//             job: job._id
+//         });
+//         await notification.save(); // Save notification
+
+//         res.status(200).json({ message: "Job request submitted" });
+//     } catch (e) {
+//         res.status(500).json({ message: e.message });
+//     }
+// });
 
 
 //tryy uli verify --chrisha(huwag po burahin)
