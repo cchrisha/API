@@ -26,12 +26,14 @@ router.post('/api/jobs', verifyToken, async (req, res) => {
         console.log("Entering job post route"); // Log entering the route
         console.log("User object:", req.user); // Log the user object
 
-        // Check if the user is verified (isVerify should not be 0)
-        if (!req.user.isVerify === 1) {
-            console.log("User is not verified, returning error");
-            return res.status(403).json({ message: "You must be verified to post a job" });
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
         }
 
+        if (user.isVerify === 0) {
+            return res.status(400).json({ message: "You must be verified to post a job" });
+        }
         const { title, wageRange, isCrypto, location, professions, categories, description } = req.body;
 
         // Create the job
