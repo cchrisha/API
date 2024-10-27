@@ -1,4 +1,3 @@
-
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
@@ -9,14 +8,12 @@ const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); 
 const { VerificationNotification } = require('./models/verificationnotification.model');
-
 const nodemailer = require('nodemailer');
 const app = express();
-app.use(express.json());
-app.use(jobRoutes); 
-app.use(cors());
+const multer = require('multer');
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-    // Configure nodemailer transporter
+// Configure nodemailer transporter
 const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -24,16 +21,6 @@ const transporter = nodemailer.createTransport({
         pass: 'kslw rpqi rota jhrn' 
     }
 });
-
-// Configure Cloudinary with your credentials
-cloudinary.config({
-    cloud_name: 'dx5reijcv',
-    api_key: '965642287997112',
-    api_secret: 'ZAKzzFiwyo_ggjVEFvmzZ6hIHVU',
-});
-
-const multer = require('multer');
-const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
 // Set up Cloudinary storage
 const storage = new CloudinaryStorage({
@@ -44,14 +31,25 @@ const storage = new CloudinaryStorage({
     },
 });
 
-// Initialize multer with Cloudinary storage
+//Cloudinary storage
 const upload = multer({ storage: storage });
 
 
-// Function to generate a random 6-digit OTP
+// Generate a random 6-digit OTP
 const generateOTP = () => {
     return Math.floor(100000 + Math.random() * 900000).toString(); 
 };
+
+app.use(express.json());
+app.use(jobRoutes); 
+app.use(cors());
+
+// Configure Cloudinary with your credentials
+cloudinary.config({
+    cloud_name: 'dx5reijcv',
+    api_key: '965642287997112',
+    api_secret: 'ZAKzzFiwyo_ggjVEFvmzZ6hIHVU',
+});
 
 // Connect to MongoDB
 mongoose.connect("mongodb+srv://repatochrishamae:b2bZiRmYya0PmASm@authapi.2xnlj.mongodb.net/?retryWrites=true&w=majority&appName=authAPI")
@@ -65,61 +63,319 @@ mongoose.connect("mongodb+srv://repatochrishamae:b2bZiRmYya0PmASm@authapi.2xnlj.
         console.error("Connection failed:", err.message);
     });
 
-// Image Upload 
-app.post('/api/uploadImage',verifyToken, upload.single('image'), async (req, res) => {
+    
+
+
+
+//-------------------------------------------------------------------------------------------------------------//
+
+// ADMIN
+
+app.post('/api/adminLogin', async (req, res) => {
+    const { email, password } = req.body;
+
     try {
+        const user = await User.findOne({ email });
+        if (!user) return res.status(400).json({ message: 'Invalid credentials' });
+
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
+
+        // Check if user is admin
+        if (user.isAdmin !== 1) {
+            return res.status(403).json({ message: "You're not an admin" });
+        }
+
+        // Generate JWT token
+        const token = jwt.sign({ userId: user._id, email: user.email }, 'your_secret_key'); 
+
+        // Send success response
+        res.status(200).json({
+            success: true, // Indicate the operation was successful
+            token: token,
+            userId: user._id,
+            isAdmin: user.isAdmin
+        });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+});
+
+// Fetch notifications for the admin
+app.get('/api/verification/notifications', verifyToken, async (req, res) => {
+    try {
+    // Check if the logged-in user is an admin
+    const user = await User.findById(req.user.userId);
+    if (!user || user.isAdmin !== 1) {
+        return res.status(403).json({ message: "Access denied" });
+    }
+
+    // Fetch all verification notifications for the admin
+    const notifications = await VerificationNotification.find({ user: user._id })
+        .sort({ createdAt: -1 });
+
+    res.status(200).json(notifications);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// Mark a verification notification as read by the admin
+app.put('/api/verification/notifications/:notificationId/read', verifyToken, async (req, res) => {
+    try {
+    // Find the notification by ID and ensure the admin owns it
+    const notification = await VerificationNotification.findById(req.params.notificationId);
+    if (!notification || notification.user.toString() !== req.user.userId) {
+        return res.status(404).json({ message: "Notification not found" });
+    }
+
+    notification.isRead = true;
+    await notification.save();
+
+    res.status(200).json({ message: "Notification marked as read" });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+    
+//Verify user in admin
+app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
+try {
+    // Fetch the requesting user from the database
+    const requester = await User.findById(req.user.userId);
+
+    // Check if the requesting user is an admin
+    if (!requester || requester.isAdmin !== 1) {
+        return res.status(403).json({ message: "Access denied. You do not have permission to perform this action." });
+    }
+
+    // Fetch the user to be verified
+    const user = await User.findById(req.params.userId);
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    // Update verification status
+    user.isVerify = req.body.isVerify ? 1 : 0; // 1 for verified, 0 for unverified
+    await user.save();
+
+    // Create a notification for the user
+    const notification = new VerificationNotification({
+        user: user._id, // The user being verified
+        requestedBy: requester._id, // The admin who requested the verification
+        message: `Your verification status has been updated to ${user.isVerify ? 'verified' : 'unverified'}.`,
+        isRead: false, // New notification, marked as unread
+    });
+    await notification.save(); // Save the notification
+
+    res.status(200).json({ message: `User verification status updated to ${user.isVerify ? 'verified' : 'unverified'}` });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
         
-        const imageUrl = req.file.path; 
+// Get All Users
+app.get('/api/users', async (req, res) => {
+try {
+    // Fetch all users from the database
+    const users = await User.find({}); // Adjust the filter if needed
+
+    // Return the list of users
+    res.status(200).json(users);
+    } catch (e) {
+        // Handle any errors
+        res.status(500).json({ message: e.message });
+    }
+});
+    
+app.get('/api/users/:identifier', async (req, res) => {
+    const identifier = req.params.identifier;
+
+    try {
+        let user;
+
+        // Check if the identifier is a valid ObjectId (i.e., user ID)
+        if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
+            // Fetch user by ID
+            user = await User.findById(identifier, 'name email location contact profession isVerify');
+        } else {
+            // Fetch user by username
+            user = await User.findOne({ name: identifier }, 'name email location contact profession isVerify');
+        }
+
+        if (user) {
+            // User found, return success response
+            res.status(200).json({
+                status: 'success',
+                message: 'User fetched successfully',
+                data: user
+            });
+        } else {
+            // User not found
+            res.status(404).json({
+                status: 'failed',
+                message: 'User not found',
+            });
+        }
+    } catch (e) {
+        // Handle any errors and return failure response
+        res.status(500).json({
+            status: 'failed',
+            message: e.message,
+        });
+    }
+});
+            
+app.put('/api/users', verifyToken, async (req, res) => {
+    const { walletAddress } = req.body; // Get wallet address from request body
+    
+    try {
+        // Check if the wallet address already exists for another user
+        const existingUser = await User.findOne({ walletAddress });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Wallet address already in use by another account.' });
+        }
+
+        // Update the user's wallet address
+        const user = await User.findByIdAndUpdate(
+            req.user.userId, // Use the ID from the token
+            { walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
+            { new: true, runValidators: true } // Return the updated document and validate
+        );
+
+        // Check if user was found and updated
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        res.status(200).json(user); // Return the updated user
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+    
+app.get('/api/userGetTransac', verifyToken, async (req, res) => {
+    try {
+        // Fetch the user based on the ID decoded from the token
         const user = await User.findById(req.user.userId);
-        user.profilePicture = imageUrl; 
-        await user.save();
-
-        res.status(200).json({
-            message: 'Image uploaded successfully',
-            imageUrl: imageUrl,
-        });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// Fetch Profile Picture
-app.get('/api/profilePicture', verifyToken, async (req, res) => {
-    try {
-        const userId = req.user.userId || req.user._id; 
-        const user = await User.findById(userId); 
-
         if (!user) {
-            return res.status(404).json({ message: 'User not found.' });
+            return res.status(404).json({ message: "User not found" });
         }
 
+        // Fetch transactions for the user's wallet address
+        const transactions = await fetchTransactions(user.walletAddress);
+
+        // Return user profile information along with transactions
         res.status(200).json({
-            profilePicture: user.profilePicture || null, 
+            userId: user._id,
+            name: user.name,
+            email: user.email,
+            location: user.location,
+            contact: user.contact,
+            profession: user.profession,
+            profilePicture: user.profilePicture,
+            walletAddress: user.walletAddress,
+            transactions: transactions.map(tx => ({
+                From: tx.sender,
+                To: tx.recipient,
+                Amount: tx.amount
+            }))
         });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
-
-// Fetch Other Profile Picture
-app.get('/api/users/:userId/profilePicture', verifyToken, async (req, res) => {
+    
+// Get User Profile
+app.get('/api/user', verifyToken, async (req, res) => {
     try {
-        const userId = req.params.userId; // Get userId from request parameters
-        const user = await User.findById(userId); // Find user by ID
-
+        // Fetch the user based on the ID decoded from the token
+        const user = await User.findById(req.user.userId);
         if (!user) {
-            return res.status(404).json({ message: 'User not found.' });
+            return res.status(404).json({ message: "User not found" });
         }
 
+        // Return user profile information
         res.status(200).json({
-            data: {
-                profilePictureUrl: user.profilePicture || null, // Adjust according to your database schema
-            },
+            userId: user._id,
+            name: user.name,
+            email: user.email,
+            location: user.location,
+            contact: user.contact,
+            profession: user.profession,
+            profilePicture: user.profilePicture,
+            walletAddress: user.walletAddress // Include if applicable
         });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+    
+async function fetchTransactions(walletAddress) {
+    const etherscanApiKey = '5KEE4GXQSGWAFCJ6CWBJPMQ5BV3VQ33IX1';
+    const url = `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&sort=desc&apikey=${etherscanApiKey}`;
+    
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.status === '1') {
+            return data.result.map(tx => ({
+                sender: tx.from,
+                recipient: tx.to,
+                amount: (parseInt(tx.value) / Math.pow(10, 18)).toFixed(4) // Convert from Wei to ETH
+            }));
+        } else {
+            console.error('Etherscan API error:', data);
+            return [];
+        }
+    } catch (error) {
+        console.error('Error fetching transactions:', error);
+        return [];
+    }
+}
+
+app.delete('/api/users/:id', async (req, res) => {
+    const userId = req.params.id;
+
+    try {
+    const deletedUser = await User.findByIdAndDelete(userId);
+
+    if (!deletedUser) {
+        return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+    res.status(500).json({ message: 'Error deleting user', error });
+    }
+});
+
+app.post('/api/adminLogout', verifyToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Optionally, you can check if the user is an admin before logging out
+        if (user.isAdmin !== 1) {
+            return res.status(403).json({ message: "Unauthorized: Admins only" });
+        }
+
+        // Optionally, if you're managing sessions, you could invalidate the session here
+
+        res.status(200).json({ message: "Logged out successfully" });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+
+
+
+
+//-------------------------------------------------------------------------------------------------------------//
+
+// USER
 
 // Create account (Sign up)
 app.post('/api/userSignup', async (req, res) => {
@@ -169,320 +425,6 @@ app.post('/api/userSignup', async (req, res) => {
     }
 });
 
-// Post a verification request to the admin
-app.post('/api/verification/request', verifyToken, async (req, res) => {
-try {
-    // Fetch the user
-    const user = await User.findById(req.user.userId);
-    if (!user) {
-        return res.status(404).json({ message: "User not found" });
-    }
-
-    // Debug: Check the value of user.isVerified
-    console.log(`User verification status: ${user.isVerified}`);
-
-    // Ensure that isVerified field is Boolean and check if the user is already verified
-    if (user.isVerify === 1) {
-        return res.status(400).json({ message: "User is already verified" });
-    }
-
-    // Fetch the admin
-    const admin = await User.findOne({ isAdmin: 1 });
-    if (!admin) {
-        return res.status(404).json({ message: "Admin not found" });
-    }
-
-    // Check if the user has already sent a verification request
-    const existingRequest = await VerificationNotification.findOne({
-        requestedBy: req.user.userId,
-        message: "Verification request pending"
-    });
-    if (existingRequest) {
-        return res.status(400).json({ message: "Verification request already submitted" });
-    }
-
-    // Create a new verification notification for the admin
-    const notification = new VerificationNotification({
-        user: admin._id, // Set the admin as the recipient
-        message: `${req.user.name} has requested verification.`,
-        requestedBy: req.user.userId,
-        isRead: false, // Mark as unread by default
-    });
-    await notification.save(); // Save the notification
-
-    res.status(200).json({ message: "Verification request submitted to admin" });
-    } catch (e) {
-        console.error("Error submitting verification request:", e);
-        res.status(500).json({ message: e.message });
-    }
-});
-
-
-// Fetch notifications for the admin
-app.get('/api/verification/notifications', verifyToken, async (req, res) => {
-try {
-    // Check if the logged-in user is an admin
-    const user = await User.findById(req.user.userId);
-    if (!user || user.isAdmin !== 1) {
-        return res.status(403).json({ message: "Access denied" });
-    }
-
-    // Fetch all verification notifications for the admin
-    const notifications = await VerificationNotification.find({ user: user._id })
-        .sort({ createdAt: -1 });
-
-    res.status(200).json(notifications);
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// Mark a verification notification as read by the admin
-app.put('/api/verification/notifications/:notificationId/read', verifyToken, async (req, res) => {
-try {
-    // Find the notification by ID and ensure the admin owns it
-    const notification = await VerificationNotification.findById(req.params.notificationId);
-    if (!notification || notification.user.toString() !== req.user.userId) {
-        return res.status(404).json({ message: "Notification not found" });
-    }
-
-    notification.isRead = true;
-    await notification.save();
-
-    res.status(200).json({ message: "Notification marked as read" });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-//Verify user in admin
-app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
-try {
-    // Fetch the requesting user from the database
-    const requester = await User.findById(req.user.userId);
-
-    // Check if the requesting user is an admin
-    if (!requester || requester.isAdmin !== 1) {
-        return res.status(403).json({ message: "Access denied. You do not have permission to perform this action." });
-    }
-
-    // Fetch the user to be verified
-    const user = await User.findById(req.params.userId);
-    if (!user) return res.status(404).json({ message: "User not found" });
-
-    // Update verification status
-    user.isVerify = req.body.isVerify ? 1 : 0; // 1 for verified, 0 for unverified
-    await user.save();
-
-    // Create a notification for the user
-    const notification = new VerificationNotification({
-        user: user._id, // The user being verified
-        requestedBy: requester._id, // The admin who requested the verification
-        message: `Your verification status has been updated to ${user.isVerify ? 'verified' : 'unverified'}.`,
-        isRead: false, // New notification, marked as unread
-    });
-    await notification.save(); // Save the notification
-
-    res.status(200).json({ message: `User verification status updated to ${user.isVerify ? 'verified' : 'unverified'}` });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-    
-// Get All Users
-app.get('/api/users', async (req, res) => {
-try {
-    // Fetch all users from the database
-    const users = await User.find({}); // Adjust the filter if needed
-
-    // Return the list of users
-    res.status(200).json(users);
-    } catch (e) {
-        // Handle any errors
-        res.status(500).json({ message: e.message });
-    }
-});
-
-app.get('/api/users/:identifier', async (req, res) => {
-    const identifier = req.params.identifier;
-
-    try {
-        let user;
-
-        // Check if the identifier is a valid ObjectId (i.e., user ID)
-        if (identifier.match(/^[0-9a-fA-F]{24}$/)) {
-            // Fetch user by ID
-            user = await User.findById(identifier, 'name email location contact profession isVerify');
-        } else {
-            // Fetch user by username
-            user = await User.findOne({ name: identifier }, 'name email location contact profession isVerify');
-        }
-
-        if (user) {
-            // User found, return success response
-            res.status(200).json({
-                status: 'success',
-                message: 'User fetched successfully',
-                data: user
-            });
-        } else {
-            // User not found
-            res.status(404).json({
-                status: 'failed',
-                message: 'User not found',
-            });
-        }
-    } catch (e) {
-        // Handle any errors and return failure response
-        res.status(500).json({
-            status: 'failed',
-            message: e.message,
-        });
-    }
-});
-        
-app.post('/api/adminLogin', async (req, res) => {
-    const { email, password } = req.body;
-
-    try {
-        const user = await User.findOne({ email });
-        if (!user) return res.status(400).json({ message: 'Invalid credentials' });
-
-        const isMatch = await bcrypt.compare(password, user.password);
-        if (!isMatch) return res.status(400).json({ message: 'Invalid credentials' });
-
-        // Check if user is admin
-        if (user.isAdmin !== 1) {
-            return res.status(403).json({ message: "You're not an admin" });
-        }
-
-        // Generate JWT token
-        const token = jwt.sign({ userId: user._id, email: user.email }, 'your_secret_key'); 
-
-        // Send success response
-        res.status(200).json({
-            success: true, // Indicate the operation was successful
-            token: token,
-            userId: user._id,
-            isAdmin: user.isAdmin
-        });
-    } catch (err) {
-        res.status(500).json({ message: err.message });
-    }
-});
-    
-
-app.put('/api/users', verifyToken, async (req, res) => {
-    const { walletAddress } = req.body; // Get wallet address from request body
-    
-    try {
-        // Check if the wallet address already exists for another user
-        const existingUser = await User.findOne({ walletAddress });
-        if (existingUser) {
-            return res.status(400).json({ message: 'Wallet address already in use by another account.' });
-        }
-
-        // Update the user's wallet address
-        const user = await User.findByIdAndUpdate(
-            req.user.userId, // Use the ID from the token
-            { walletAddress, updatedAt: new Date() }, // Update walletAddress and timestamp
-            { new: true, runValidators: true } // Return the updated document and validate
-        );
-
-        // Check if user was found and updated
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        res.status(200).json(user); // Return the updated user
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-    
-
-app.get('/api/userGetTransac', verifyToken, async (req, res) => {
-    try {
-        // Fetch the user based on the ID decoded from the token
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Fetch transactions for the user's wallet address
-        const transactions = await fetchTransactions(user.walletAddress);
-
-        // Return user profile information along with transactions
-        res.status(200).json({
-            userId: user._id,
-            name: user.name,
-            email: user.email,
-            location: user.location,
-            contact: user.contact,
-            profession: user.profession,
-            profilePicture: user.profilePicture,
-            walletAddress: user.walletAddress,
-            transactions: transactions.map(tx => ({
-                From: tx.sender,
-                To: tx.recipient,
-                Amount: tx.amount
-            }))
-        });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-    // Get User Profile
-app.get('/api/user', verifyToken, async (req, res) => {
-    try {
-        // Fetch the user based on the ID decoded from the token
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Return user profile information
-        res.status(200).json({
-            userId: user._id,
-            name: user.name,
-            email: user.email,
-            location: user.location,
-            contact: user.contact,
-            profession: user.profession,
-            profilePicture: user.profilePicture,
-            walletAddress: user.walletAddress // Include if applicable
-        });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-async function fetchTransactions(walletAddress) {
-    const etherscanApiKey = '5KEE4GXQSGWAFCJ6CWBJPMQ5BV3VQ33IX1';
-    const url = `https://api-sepolia.etherscan.io/api?module=account&action=txlist&address=${walletAddress}&startblock=0&endblock=99999999&sort=desc&apikey=${etherscanApiKey}`;
-    
-    try {
-        const response = await fetch(url);
-        const data = await response.json();
-
-        if (data.status === '1') {
-            return data.result.map(tx => ({
-                sender: tx.from,
-                recipient: tx.to,
-                amount: (parseInt(tx.value) / Math.pow(10, 18)).toFixed(4) // Convert from Wei to ETH
-            }));
-        } else {
-            console.error('Etherscan API error:', data);
-            return [];
-        }
-    } catch (error) {
-        console.error('Error fetching transactions:', error);
-        return [];
-    }
-}
-    
 // Login 
 app.post('/api/userLogin', async (req, res) => {
     try {
@@ -550,6 +492,54 @@ app.post('/api/userLogin', async (req, res) => {
     }
 });
 
+// Post a verification request to the admin
+app.post('/api/verification/request', verifyToken, async (req, res) => {
+try {
+    // Fetch the user
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+        return res.status(404).json({ message: "User not found" });
+    }
+
+    // Debug: Check the value of user.isVerified
+    console.log(`User verification status: ${user.isVerified}`);
+
+    // Ensure that isVerified field is Boolean and check if the user is already verified
+    if (user.isVerify === 1) {
+        return res.status(400).json({ message: "User is already verified" });
+    }
+
+    // Fetch the admin
+    const admin = await User.findOne({ isAdmin: 1 });
+    if (!admin) {
+        return res.status(404).json({ message: "Admin not found" });
+    }
+
+    // Check if the user has already sent a verification request
+    const existingRequest = await VerificationNotification.findOne({
+        requestedBy: req.user.userId,
+        message: "Verification request pending"
+    });
+    if (existingRequest) {
+        return res.status(400).json({ message: "Verification request already submitted" });
+    }
+
+    // Create a new verification notification for the admin
+    const notification = new VerificationNotification({
+        user: admin._id, // Set the admin as the recipient
+        message: `${req.user.name} has requested verification.`,
+        requestedBy: req.user.userId,
+        isRead: false, // Mark as unread by default
+    });
+    await notification.save(); // Save the notification
+
+    res.status(200).json({ message: "Verification request submitted to admin" });
+    } catch (e) {
+        console.error("Error submitting verification request:", e);
+        res.status(500).json({ message: e.message });
+    }
+});
+
 // User Profile Update
 app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
     try {
@@ -567,6 +557,62 @@ app.put('/api/updateUserProfile', verifyToken, async (req, res) => {
         return res.status(200).json(updatedUser);
     } catch (e) {
         return res.status(500).json({ message: e.message });
+    }
+});
+
+// Image Upload 
+app.post('/api/uploadImage',verifyToken, upload.single('image'), async (req, res) => {
+    try {
+        
+        const imageUrl = req.file.path; 
+        const user = await User.findById(req.user.userId);
+        user.profilePicture = imageUrl; 
+        await user.save();
+
+        res.status(200).json({
+            message: 'Image uploaded successfully',
+            imageUrl: imageUrl,
+        });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// Fetch Profile Picture
+app.get('/api/profilePicture', verifyToken, async (req, res) => {
+    try {
+        const userId = req.user.userId || req.user._id; 
+        const user = await User.findById(userId); 
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        res.status(200).json({
+            profilePicture: user.profilePicture || null, 
+        });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// Fetch Other Profile Picture
+app.get('/api/users/:userId/profilePicture', verifyToken, async (req, res) => {
+    try {
+        const userId = req.params.userId; // Get userId from request parameters
+        const user = await User.findById(userId); // Find user by ID
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found.' });
+        }
+
+        res.status(200).json({
+            data: {
+                profilePictureUrl: user.profilePicture || null, // Adjust according to your database schema
+            },
+        });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
     }
 });
 
@@ -600,48 +646,6 @@ app.put('/api/changePassword', verifyToken, async (req, res) => {
         await user.save();
 
         res.status(200).json({ message: "Password changed successfully" });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-    
-app.post('/api/adminLogout', verifyToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Optionally, you can check if the user is an admin before logging out
-        if (user.isAdmin !== 1) {
-            return res.status(403).json({ message: "Unauthorized: Admins only" });
-        }
-
-        // Optionally, if you're managing sessions, you could invalidate the session here
-
-        res.status(200).json({ message: "Logged out successfully" });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-    
-
-app.post('/api/logout', verifyToken, async (req, res) => {
-    try {
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Check if user is logged in with MetaMask
-        if (user.walletAddress) {
-            // Perform MetaMask logout logic here if needed
-            user.walletAddress = null; // Remove the wallet address from the user's profile
-            await user.save();
-            return res.status(200).json({ message: "Logged out successfully" });
-        }
-
-        res.status(200).json({ message: "Logged out successfully" });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
@@ -699,22 +703,6 @@ app.post('/api/forgotPassword', async (req, res) => {
     }
 });
 
-app.delete('/api/users/:id', async (req, res) => {
-    const userId = req.params.id;
-
-    try {
-    const deletedUser = await User.findByIdAndDelete(userId);
-
-    if (!deletedUser) {
-        return res.status(404).json({ message: 'User not found' });
-    }
-
-    res.json({ message: 'User deleted successfully' });
-    } catch (error) {
-    res.status(500).json({ message: 'Error deleting user', error });
-    }
-});
-
 // Verify OTP
 app.post('/api/verifyOtp', async (req, res) => {
     try {
@@ -767,6 +755,7 @@ app.post('/api/resetPassword', async (req, res) => {
         res.status(500).json({ message: e.message });
     }
 });
+
 app.post('/api/transactions', async (req, res) => {
     const { senderId, receiverId, amount } = req.body;
 
@@ -790,33 +779,23 @@ app.post('/api/transactions', async (req, res) => {
     }
 });
 
+app.post('/api/logout', verifyToken, async (req, res) => {
+    try {
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
 
+        // Check if user is logged in with MetaMask
+        if (user.walletAddress) {
+            // Perform MetaMask logout logic here if needed
+            user.walletAddress = null; // Remove the wallet address from the user's profile
+            await user.save();
+            return res.status(200).json({ message: "Logged out successfully" });
+        }
 
-
-// const express = require('express');
-// const mongoose = require('mongoose');
-// const authRoutes = require('./routes/authRoutes');
-// const userRoutes = require('./routes/userRoutes');
-// const imageRoutes = require('./routes/imageRoutes');
-// const transactionRoutes = require('./routes/transactionRoutes');
-// const app = express();
-
-// app.use(express.json());
-
-// // Connect to MongoDB
-// mongoose.connect('mongodb+srv://repatochrishamae:b2bZiRmYya0PmASm@authapi.2xnlj.mongodb.net/?retryWrites=true&w=majority&appName=authAPI', {
-//     useNewUrlParser: true,
-//     useUnifiedTopology: true,
-// });
-
-// // Use routes
-// app.use('/api/auth', authRoutes);
-// app.use('/api/users', userRoutes);
-// app.use('/api/images', imageRoutes);
-// app.use('/api/transactions', transactionRoutes); // Add this line
-
-// // Start server
-// const PORT = process.env.PORT || 3001;
-// app.listen(PORT, () => {
-//     console.log(`Server is running on port ${PORT}`)z;
-// });
+        res.status(200).json({ message: "Logged out successfully" });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
