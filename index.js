@@ -101,6 +101,27 @@ app.post('/api/adminLogin', async (req, res) => {
     }
 });
         
+router.get('/api/user/:userId/jobs/all', verifyToken, async (req, res) => {
+    try {
+        const userId = req.params.userId;
+
+        // Fetch jobs for the user by userId
+        const jobs = await Job.find({ userId: userId }); // Adjust according to your Job schema
+
+        // If you want to categorize jobs, you can process them here
+        const categorizedJobs = {
+            current: jobs.filter(job => job.status === 'current'),
+            completed: jobs.filter(job => job.status === 'completed'),
+            requested: jobs.filter(job => job.status === 'requested'),
+            rejected: jobs.filter(job => job.status === 'rejected'),
+        };
+
+        res.status(200).json(categorizedJobs);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 // Get All Users
 app.get('/api/users', async (req, res) => {
 try {
