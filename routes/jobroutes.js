@@ -849,38 +849,7 @@ router.get('/transaction-notifications/:userId', async (req, res) => {
     }
 });
 
-// router.patch('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
-//     const { notificationId } = req.params;
-
-//     try {
-//         // Try to update the TransactionNotification first
-//         const transactionNotification = await TransactionNotification.findByIdAndUpdate(
-//             notificationId,
-//             { isRead: true },
-//             { new: true }
-//         );
-
-//         if (transactionNotification) {
-//             return res.status(200).json(transactionNotification);
-//         }
-
-//         // If the transaction notification was not found, check the Notification model
-//         const notification = await Notification.findById(notificationId);
-
-//         if (!notification || notification.user.toString() !== req.user.userId) {
-//             return res.status(404).json({ message: "Notification not found" });
-//         }
-
-//         notification.isRead = true;
-//         await notification.save();
-
-//         res.status(200).json({ message: "Notification marked as read" });
-//     } catch (error) {
-//         res.status(400).json({ error: error.message });
-//     }
-// });
-
-router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
+router.patch('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
     const { notificationId } = req.params;
 
     try {
@@ -910,6 +879,8 @@ router.put('/api/notifications/:notificationId/read', verifyToken, async (req, r
         res.status(400).json({ error: error.message });
     }
 });
+
+
 
 // Mark a notification as read
 // router.patch('/transaction-notifications/:id/read', async (req, res) => {
