@@ -849,7 +849,7 @@ router.get('/transaction-notifications/:userId', async (req, res) => {
     }
 });
 
-router.patch('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
+router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
     const { notificationId } = req.params;
 
     try {
