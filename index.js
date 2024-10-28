@@ -100,32 +100,6 @@ app.post('/api/adminLogin', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-router.get('/user/:userId/jobs/all', verifyToken, async (req, res) => {
-    try {
-        // Find the user by ID
-        const user = await User.findById(req.params.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Fetch jobs based on user's ID
-        const currentJobs = await Job.find({ userId: user._id, status: 'current' });
-        const completedJobs = await Job.find({ userId: user._id, status: 'completed' });
-        const requestedJobs = await Job.find({ userId: user._id, status: 'requested' });
-        const rejectedJobs = await Job.find({ userId: user._id, status: 'rejected' });
-
-        // Respond with the categorized jobs
-        res.status(200).json({
-            current: currentJobs,
-            completed: completedJobs,
-            requested: requestedJobs,
-            rejected: rejectedJobs,
-        });
-    } catch (error) {
-        console.error('Error fetching jobs:', error);
-        res.status(500).json({ message: error.message });
-    }
-});
 
 // Get All Users
 app.get('/api/users', async (req, res) => {
