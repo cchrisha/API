@@ -6,7 +6,7 @@ const Job = require('../models/job.model.js');  // Make sure Job model is import
 const mongoose = require('mongoose');
 const { Parser } = require('json2csv');
 const User = require('../models/user.model.js');  // Adjust the path if necessary
-const { Notification, TransactionNotification, VerificationNotification } = require('../models/notification.model');
+const { Notification, TransactionNotification } = require('../models/notification.model');
 // Post a Job
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
@@ -387,55 +387,15 @@ router.get('/api/notifications', verifyToken, async (req, res) => {
     }
 });
 
-// Fetch notifications for the authenticated user
-router.get('/api/notifications', verifyToken, async (req, res) => {
-    try {
-        // Fetch the logged-in user from the database
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Fetch all notifications where the logged-in user is the recipient
-        const notifications = await Notification.find({ user: user._id }) // Change to fetch notifications for this user
-            .sort({ createdAt: -1 }); // Sort notifications by creation date in descending order
-
-        res.status(200).json(notifications);
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
 // Mark a notification as read 
-// router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
-//     try {
-//         const notification = await Notification.findById(req.params.notificationId);
-
-//         if (!notification || notification.user.toString() !== req.user.userId) {
-//             return res.status(404).json({ message: "Notification not found" });
-//         }
-
-//         notification.isRead = true;
-//         await notification.save();
-
-//         res.status(200).json({ message: "Notification marked as read" });
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
-
-// Mark a notification as read
 router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
     try {
-        // Find the notification by ID
         const notification = await Notification.findById(req.params.notificationId);
 
-        // Check if the notification exists and if the logged-in user is the recipient
         if (!notification || notification.user.toString() !== req.user.userId) {
-            return res.status(404).json({ message: "Notification not found or you don't have permission to mark it as read" });
+            return res.status(404).json({ message: "Notification not found" });
         }
 
-        // Mark the notification as read
         notification.isRead = true;
         await notification.save();
 
@@ -444,7 +404,6 @@ router.put('/api/notifications/:notificationId/read', verifyToken, async (req, r
         res.status(500).json({ message: e.message });
     }
 });
-
 
 // Cancel Job Request
 router.delete('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
@@ -890,6 +849,37 @@ router.get('/transaction-notifications/:userId', async (req, res) => {
     }
 });
 
+// router.patch('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
+//     const { notificationId } = req.params;
+
+//     try {
+//         // Try to update the TransactionNotification first
+//         const transactionNotification = await TransactionNotification.findByIdAndUpdate(
+//             notificationId,
+//             { isRead: true },
+//             { new: true }
+//         );
+
+//         if (transactionNotification) {
+//             return res.status(200).json(transactionNotification);
+//         }
+
+//         // If the transaction notification was not found, check the Notification model
+//         const notification = await Notification.findById(notificationId);
+
+//         if (!notification || notification.user.toString() !== req.user.userId) {
+//             return res.status(404).json({ message: "Notification not found" });
+//         }
+
+//         notification.isRead = true;
+//         await notification.save();
+
+//         res.status(200).json({ message: "Notification marked as read" });
+//     } catch (error) {
+//         res.status(400).json({ error: error.message });
+//     }
+// });
+
 router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
     const { notificationId } = req.params;
 
@@ -920,8 +910,6 @@ router.put('/api/notifications/:notificationId/read', verifyToken, async (req, r
         res.status(400).json({ error: error.message });
     }
 });
-
-
 
 // Mark a notification as read
 // router.patch('/transaction-notifications/:id/read', async (req, res) => {
@@ -961,172 +949,3 @@ router.put('/api/notifications/:notificationId/read', verifyToken, async (req, r
 //     }
 // });
 module.exports = router;
-
-
-
-
-
-
-
-
-//Chrisha
-// Fetch notifications for the admin
-router.get('/api/verification/notifications', verifyToken, async (req, res) => {
-    try {
-    // Check if the logged-in user is an admin
-    const user = await User.findById(req.user.userId);
-    if (!user || user.isAdmin !== 1) {
-        return res.status(403).json({ message: "Access denied" });
-    }
-
-    // Fetch all verification notifications for the admin
-    const notifications = await VerificationNotification.find({ user: user._id })
-        // .populate('requestedBy', 'name email contact location')    
-        .sort({ createdAt: -1 });
-
-    res.status(200).json(notifications);
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// Mark a verification notification as read by the admin
-router.put('/api/verification/notifications/:notificationId/read', verifyToken, async (req, res) => {
-    try {
-    // Find the notification by ID and ensure the admin owns it
-    const notification = await VerificationNotification.findById(req.params.notificationId);
-    if (!notification || notification.user.toString() !== req.user.userId) {
-        return res.status(404).json({ message: "Notification not found" });
-    }
-
-    notification.isRead = true;
-    await notification.save();
-
-    res.status(200).json({ message: "Notification marked as read" });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-    
-// Verify user in admin
-router.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
-    try {
-        // Fetch the requesting user from the database
-        const requester = await User.findById(req.user.userId);
-
-        // Check if the requesting user is an admin
-        if (!requester || requester.isAdmin !== 1) {
-            return res.status(403).json({ message: "Access denied. You do not have permission to perform this action." });
-        }
-
-        // Fetch the user to be verified
-        const user = await User.findById(req.params.userId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        // Update verification status
-        user.isVerify = req.body.isVerify ? 1 : 0; // 1 for verified, 0 for unverified
-        await user.save();
-
-        // Create a notification for the user
-        const notification = new VerificationNotification({
-            user: user._id, // The user being verified
-            requestedBy: requester._id, // The admin who requested the verification
-            message: `Your verification status has been approved. Account ${user.isVerify ? 'verified' : 'unverified'}.`,
-            isRead: false, // New notification, marked as unread
-        });
-        await notification.save(); // Save the notification
-
-        res.status(200).json({ message: `User verification status updated to ${user.isVerify ? 'verified' : 'unverified'}` });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// Post a verification request to the admin
-router.post('/api/verification/request', verifyToken, async (req, res) => {
-    try {
-    // Fetch the user
-    const user = await User.findById(req.user.userId);
-    if (!user) {
-        return res.status(404).json({ message: "User not found" });
-    }
-
-    // Debug: Check the value of user.isVerified
-    console.log(`User verification status: ${user.isVerified}`);
-
-    // Ensure that isVerified field is Boolean and check if the user is already verified
-    if (user.isVerify === 1) {
-        return res.status(400).json({ message: "User is already verified" });
-    }
-
-    // Fetch the admin
-    const admin = await User.findOne({ isAdmin: 1 });
-    if (!admin) {
-        return res.status(404).json({ message: "Admin not found" });
-    }
-
-    // Check if the user has already sent a verification request
-    const existingRequest = await VerificationNotification.findOne({
-        requestedBy: req.user.userId,
-        message: "Verification request pending"
-    });
-    if (existingRequest) {
-        return res.status(400).json({ message: "Verification request already submitted" });
-    }
-
-    // Create a new verification notification for the admin
-    const notification = new VerificationNotification({
-        user: admin._id, // Set the admin as the recipient
-        message: `${req.user.name} has requested verification.`,
-        requestedBy: req.user.userId,
-        isRead: false, // Mark as unread by default
-    });
-    await notification.save(); // Save the notification
-
-    res.status(200).json({ message: "Verification request submitted to admin" });
-    } catch (e) {
-        console.error("Error submitting verification request:", e);
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// Fetch notifications for a user
-router.get('/api/user/notifications', verifyToken, async (req, res) => {
-    try {
-        // Fetch the logged-in user from the database
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Fetch all verification notifications where the logged-in user is the recipient
-        const notifications = await VerificationNotification.find({ user: user._id }) // Fetch notifications for this user
-            .sort({ createdAt: -1 }); // Sort notifications by creation date in descending order
-
-        res.status(200).json(notifications);
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// Mark a verification notification as read by the user
-router.put('/api/user/notifications/:notificationId/read', verifyToken, async (req, res) => {
-    try {
-        // Find the notification by ID
-        const notification = await VerificationNotification.findById(req.params.notificationId);
-        
-        // Check if the notification exists and if the logged-in user is the recipient
-        if (!notification || notification.user.toString() !== req.user.userId) {
-            return res.status(404).json({ message: "Notification not found or you don't have permission to mark it as read" });
-        }
-
-        // Mark the notification as read
-        notification.isRead = true;
-        await notification.save();
-
-        res.status(200).json({ message: "Notification marked as read" });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-    
