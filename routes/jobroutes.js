@@ -6,7 +6,7 @@ const Job = require('../models/job.model.js');  // Make sure Job model is import
 const mongoose = require('mongoose');
 const { Parser } = require('json2csv');
 const User = require('../models/user.model.js');  // Adjust the path if necessary
-const { Notification, TransactionNotification } = require('../models/notification.model');
+const { Notification, TransactionNotification, VerificationNotification } = require('../models/notification.model');
 // Post a Job
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
@@ -909,6 +909,26 @@ router.patch('/transaction-notifications/:id/read', async (req, res) => {
 //         res.status(500).json({ message: e.message });
 //     }
 // });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
