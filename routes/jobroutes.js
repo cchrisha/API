@@ -387,6 +387,25 @@ router.get('/api/notifications', verifyToken, async (req, res) => {
     }
 });
 
+// Fetch notifications for the authenticated user
+router.get('/api/notifications', verifyToken, async (req, res) => {
+    try {
+        // Fetch the logged-in user from the database
+        const user = await User.findById(req.user.userId);
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+
+        // Fetch all notifications where the logged-in user is the recipient
+        const notifications = await Notification.find({ user: user._id }) // Change to fetch notifications for this user
+            .sort({ createdAt: -1 }); // Sort notifications by creation date in descending order
+
+        res.status(200).json(notifications);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 // Mark a notification as read 
 router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
     try {
@@ -404,6 +423,28 @@ router.put('/api/notifications/:notificationId/read', verifyToken, async (req, r
         res.status(500).json({ message: e.message });
     }
 });
+
+// Mark a notification as read
+router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
+    try {
+        // Find the notification by ID
+        const notification = await Notification.findById(req.params.notificationId);
+
+        // Check if the notification exists and if the logged-in user is the recipient
+        if (!notification || notification.user.toString() !== req.user.userId) {
+            return res.status(404).json({ message: "Notification not found or you don't have permission to mark it as read" });
+        }
+
+        // Mark the notification as read
+        notification.isRead = true;
+        await notification.save();
+
+        res.status(200).json({ message: "Notification marked as read" });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
 
 // Cancel Job Request
 router.delete('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
