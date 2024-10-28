@@ -6,7 +6,7 @@ const Job = require('../models/job.model.js');  // Make sure Job model is import
 const mongoose = require('mongoose');
 const { Parser } = require('json2csv');
 const User = require('../models/user.model.js');  // Adjust the path if necessary
-const { Notification, TransactionNotification, VerificationNotification } = require('../models/notification.model');
+const { Notification, TransactionNotification } = require('../models/notification.model');
 // Post a Job
 router.post('/api/jobs', verifyToken, async (req, res) => {
     try {
@@ -387,55 +387,15 @@ router.get('/api/notifications', verifyToken, async (req, res) => {
     }
 });
 
-// Fetch notifications for the authenticated user
-router.get('/api/notifications', verifyToken, async (req, res) => {
-    try {
-        // Fetch the logged-in user from the database
-        const user = await User.findById(req.user.userId);
-        if (!user) {
-            return res.status(404).json({ message: "User not found" });
-        }
-
-        // Fetch all notifications where the logged-in user is the recipient
-        const notifications = await Notification.find({ user: user._id }) // Change to fetch notifications for this user
-            .sort({ createdAt: -1 }); // Sort notifications by creation date in descending order
-
-        res.status(200).json(notifications);
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
 // Mark a notification as read 
-// router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
-//     try {
-//         const notification = await Notification.findById(req.params.notificationId);
-
-//         if (!notification || notification.user.toString() !== req.user.userId) {
-//             return res.status(404).json({ message: "Notification not found" });
-//         }
-
-//         notification.isRead = true;
-//         await notification.save();
-
-//         res.status(200).json({ message: "Notification marked as read" });
-//     } catch (e) {
-//         res.status(500).json({ message: e.message });
-//     }
-// });
-
-// Mark a notification as read
 router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
     try {
-        // Find the notification by ID
         const notification = await Notification.findById(req.params.notificationId);
 
-        // Check if the notification exists and if the logged-in user is the recipient
         if (!notification || notification.user.toString() !== req.user.userId) {
-            return res.status(404).json({ message: "Notification not found or you don't have permission to mark it as read" });
+            return res.status(404).json({ message: "Notification not found" });
         }
 
-        // Mark the notification as read
         notification.isRead = true;
         await notification.save();
 
@@ -444,7 +404,6 @@ router.put('/api/notifications/:notificationId/read', verifyToken, async (req, r
         res.status(500).json({ message: e.message });
     }
 });
-
 
 // Cancel Job Request
 router.delete('/api/jobs/:jobId/request', verifyToken, async (req, res) => {
@@ -861,14 +820,14 @@ router.get('/users/wallet/:walletAddress', async (req, res) => {
 
 //lana
 router.post('/transaction-notifications', async (req, res) => {
-    const { user, message } = req.body; // Removed transactionHash from here
+    const { receiver, message } = req.body; // Changed user to receiver
 
     try {
         const notification = new TransactionNotification({
-            user,
-            message: `${req.user.name} send your payment successfully has recieve.`,
+            receiver, // Updated this line to use receiver instead of user
+            message,
             // No need to include transactionHash
-        })
+        });
 
         await notification.save();
         res.status(201).json(notification);
@@ -890,32 +849,22 @@ router.get('/transaction-notifications/:userId', async (req, res) => {
     }
 });
 
-router.put('/api/notifications/:notificationId/read', verifyToken, async (req, res) => {
-    const { notificationId } = req.params;
+// Mark a notification as read
+router.patch('/transaction-notifications/:id/read', async (req, res) => {
+    const { id } = req.params;
 
     try {
-        // Try to update the TransactionNotification first
-        const transactionNotification = await TransactionNotification.findByIdAndUpdate(
-            notificationId,
+        const notification = await TransactionNotification.findByIdAndUpdate(
+            id,
             { isRead: true },
             { new: true }
         );
 
-        if (transactionNotification) {
-            return res.status(200).json(transactionNotification);
+        if (!notification) {
+            return res.status(404).json({ error: 'Notification not found' });
         }
 
-        // If the transaction notification was not found, check the Notification model
-        const notification = await Notification.findById(notificationId);
-
-        if (!notification || notification.user.toString() !== req.user.userId) {
-            return res.status(404).json({ message: "Notification not found" });
-        }
-
-        notification.isRead = true;
-        await notification.save();
-
-        res.status(200).json({ message: "Notification marked as read" });
+        res.status(200).json(notification);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
