@@ -236,6 +236,40 @@ async function fetchTransactions(walletAddress) {
     }
 }
 
+app.get('/api/userGetAllTransac', verifyToken, async (req, res) => {
+    try {
+        // Fetch all users from the database
+        const users = await User.find();
+
+        if (!users.length) {
+            return res.status(404).json({ message: "No users found" });
+        }
+
+        const allTransactions = [];
+
+        // Iterate through each user to fetch their transactions
+        for (const user of users) {
+            const transactions = await fetchTransactions(user.walletAddress);
+            const userTransactions = transactions.map(tx => ({
+                userId: user._id,
+                name: user.name,
+                email: user.email,
+                From: tx.sender,
+                To: tx.recipient,
+                Amount: tx.amount,
+            }));
+
+            allTransactions.push(...userTransactions);
+        }
+
+        // Return all transactions
+        res.status(200).json(allTransactions);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+
 app.delete('/api/users/:id', async (req, res) => {
     const userId = req.params.id;
 
