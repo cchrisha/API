@@ -8,8 +8,15 @@ const notificationSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now } // Timestamp
 });
 
+// const transactionNotificationSchema = new mongoose.Schema({
+//     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // The user receiving the notification
+//     message: { type: String, required: true }, // Notification message
+//     isRead: { type: Boolean, default: false }, // To track if the notification has been read
+//     createdAt: { type: Date, default: Date.now } // Timestamp
+// });
+
 const transactionNotificationSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // The user receiving the notification
+    receiver: { type: String, required: true }, // Changed from ObjectId to String
     message: { type: String, required: true }, // Notification message
     isRead: { type: Boolean, default: false }, // To track if the notification has been read
     createdAt: { type: Date, default: Date.now } // Timestamp
