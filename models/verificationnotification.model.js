@@ -1,16 +1,16 @@
-const mongoose = require('mongoose');
+// const mongoose = require('mongoose');
 
-const VerificationNotificationSchema = new mongoose.Schema({
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // The admin who receives the notification
-    message: { type: String, required: true },
-    isRead: { type: Boolean, default: false }, // Track if the notification has been read
-    requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // The user who made the request
-    createdAt: { type: Date, default: Date.now } // Auto-set to the current date
-});
+// const VerificationNotificationSchema = new mongoose.Schema({
+//     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // The admin who receives the notification
+//     message: { type: String, required: true },
+//     isRead: { type: Boolean, default: false }, // Track if the notification has been read
+//     requestedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }, // The user who made the request
+//     createdAt: { type: Date, default: Date.now } // Auto-set to the current date
+// });
 
-const VerificationNotification = mongoose.model('VerificationNotification', VerificationNotificationSchema);
+// const VerificationNotification = mongoose.model('VerificationNotification', VerificationNotificationSchema);
 
-module.exports = { VerificationNotification };
+// module.exports = { VerificationNotification };
 
 
 
