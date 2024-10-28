@@ -960,7 +960,7 @@ router.put('/api/notifications/:notificationId/read', verifyToken, async (req, r
 //         res.status(500).json({ message: e.message });
 //     }
 // });
-module.exports = router;
+
 
 
 
@@ -1009,7 +1009,7 @@ router.put('/api/verification/notifications/:notificationId/read', verifyToken, 
 });
     
 // Verify user in admin
-router.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
+router.put('/api/user/:userId/verify', verifyToken, async (req, res) => {
     try {
         // Fetch the requesting user from the database
         const requester = await User.findById(req.user.userId);
@@ -1130,3 +1130,5 @@ router.put('/api/user/notifications/:notificationId/read', verifyToken, async (r
     }
 });
     
+
+module.exports = router;
