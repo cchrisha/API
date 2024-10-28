@@ -820,11 +820,11 @@ router.get('/users/wallet/:walletAddress', async (req, res) => {
 
 //lana
 router.post('/transaction-notifications', async (req, res) => {
-    const { user, message } = req.body; // Removed transactionHash from here
+    const { receiver, message } = req.body; // Changed user to receiver
 
     try {
         const notification = new TransactionNotification({
-            user,
+            receiver, // Updated this line to use receiver instead of user
             message,
             // No need to include transactionHash
         });
