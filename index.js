@@ -7,7 +7,6 @@ const User = require('./models/user.model.js');
 const verifyToken = require('./middleware/auth');
 const cloudinary = require('cloudinary').v2;
 const jobRoutes = require('./routes/jobroutes'); 
-const { Notification, TransactionNotification, VerificationNotification } = require('../models/notification.model');
 const nodemailer = require('nodemailer');
 const app = express();
 const multer = require('multer');
@@ -100,79 +99,6 @@ app.post('/api/adminLogin', async (req, res) => {
         res.status(500).json({ message: err.message });
     }
 });
-
-// Fetch notifications for the admin
-app.get('/api/verification/notifications', verifyToken, async (req, res) => {
-    try {
-    // Check if the logged-in user is an admin
-    const user = await User.findById(req.user.userId);
-    if (!user || user.isAdmin !== 1) {
-        return res.status(403).json({ message: "Access denied" });
-    }
-
-    // Fetch all verification notifications for the admin
-    const notifications = await VerificationNotification.find({ user: user._id })
-        // .populate('requestedBy', 'name email contact location')    
-        .sort({ createdAt: -1 });
-
-    res.status(200).json(notifications);
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-// Mark a verification notification as read by the admin
-app.put('/api/verification/notifications/:notificationId/read', verifyToken, async (req, res) => {
-    try {
-    // Find the notification by ID and ensure the admin owns it
-    const notification = await VerificationNotification.findById(req.params.notificationId);
-    if (!notification || notification.user.toString() !== req.user.userId) {
-        return res.status(404).json({ message: "Notification not found" });
-    }
-
-    notification.isRead = true;
-    await notification.save();
-
-    res.status(200).json({ message: "Notification marked as read" });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-    
-// Verify user in admin
-app.patch('/api/user/:userId/verify', verifyToken, async (req, res) => {
-    try {
-        // Fetch the requesting user from the database
-        const requester = await User.findById(req.user.userId);
-
-        // Check if the requesting user is an admin
-        if (!requester || requester.isAdmin !== 1) {
-            return res.status(403).json({ message: "Access denied. You do not have permission to perform this action." });
-        }
-
-        // Fetch the user to be verified
-        const user = await User.findById(req.params.userId);
-        if (!user) return res.status(404).json({ message: "User not found" });
-
-        // Update verification status
-        user.isVerify = req.body.isVerify ? 1 : 0; // 1 for verified, 0 for unverified
-        await user.save();
-
-        // Create a notification for the user
-        const notification = new VerificationNotification({
-            user: user._id, // The user being verified
-            requestedBy: requester._id, // The admin who requested the verification
-            message: `Your verification status has been approved. Account ${user.isVerify ? 'verified' : 'unverified'}.`,
-            isRead: false, // New notification, marked as unread
-        });
-        await notification.save(); // Save the notification
-
-        res.status(200).json({ message: `User verification status updated to ${user.isVerify ? 'verified' : 'unverified'}` });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
         
 // Get All Users
 app.get('/api/users', async (req, res) => {
