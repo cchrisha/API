@@ -798,43 +798,43 @@ router.get('/users/wallet/:walletAddress', async (req, res) => {
 //     }
 // });
 
-// router.patch('/transaction-notifications/:id/read', async (req, res) => {
-//     const { id } = req.params;
-
-//     try {
-//         const notification = await TransactionNotification.findByIdAndUpdate(
-//             id,
-//             { isRead: true },
-//             { new: true }
-//         );
-
-//         if (!notification) {
-//             return res.status(404).json({ error: 'Notification not found' });
-//         }
-
-//         res.status(200).json(notification);
-//     } catch (error) {
-//         res.status(400).json({ error: error.message });
-//     }
-// });
-
-//lana
-router.post('/transaction-notifications', async (req, res) => {
-    const { receiver, message } = req.body; // Changed user to receiver
+router.patch('/transaction-notifications/:id/read', async (req, res) => {
+    const { id } = req.params;
 
     try {
-        const notification = new TransactionNotification({
-            receiver, // Updated this line to use receiver instead of user
-            message,
-            // No need to include transactionHash
-        });
+        const notification = await TransactionNotification.findByIdAndUpdate(
+            id,
+            { isRead: true },
+            { new: true }
+        );
 
-        await notification.save();
-        res.status(201).json(notification);
+        if (!notification) {
+            return res.status(404).json({ error: 'Notification not found' });
+        }
+
+        res.status(200).json(notification);
     } catch (error) {
         res.status(400).json({ error: error.message });
     }
 });
+
+//lana
+// router.post('/transaction-notifications', async (req, res) => {
+//     const { receiver, message } = req.body; // Changed user to receiver
+
+//     try {
+//         const notification = new TransactionNotification({
+//             receiver, // Updated this line to use receiver instead of user
+//             message,
+//             // No need to include transactionHash
+//         });
+
+//         await notification.save();
+//         res.status(201).json(notification);
+//     } catch (error) {
+//         res.status(400).json({ error: error.message });
+//     }
+// });
 
 
 // Get all transaction notifications for a user
